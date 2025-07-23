@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "lib/createx/src/CreateX.sol";
-import "../Constants.sol";
+import "../DeploymentConstants.sol";
 import "contracts/tokens/CdxUSD.sol";
 
-contract CdxUsdDeploy is Script, Constants {
+contract CdxUsdDeploy is Script, DeploymentConstants {
     string public name = "Cod3x USD";
     string public symbol = "cdxUSD";
     address public delegate = timelock; // testnet address
