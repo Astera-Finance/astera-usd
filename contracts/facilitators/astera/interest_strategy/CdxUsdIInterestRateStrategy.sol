@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.22;
 
-// Cod3x Lend imports.
+// Astera imports.
 import {IReserveInterestRateStrategy} from
-    "lib/Cod3x-Lend/contracts/interfaces/IReserveInterestRateStrategy.sol";
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
-import {PercentageMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/PercentageMath.sol";
+    "lib/astera/contracts/interfaces/IReserveInterestRateStrategy.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
+import {PercentageMath} from "lib/astera/contracts/protocol/libraries/math/PercentageMath.sol";
 import {ILendingPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolAddressesProvider.sol";
-import {IAToken} from "lib/Cod3x-Lend/contracts/interfaces/IAToken.sol";
-import {IVariableDebtToken} from "lib/Cod3x-Lend/contracts/interfaces/IVariableDebtToken.sol";
+    "lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
+import {IAToken} from "lib/astera/contracts/interfaces/IAToken.sol";
+import {IVariableDebtToken} from "lib/astera/contracts/interfaces/IVariableDebtToken.sol";
 import {VariableDebtToken} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
-import {DataTypes} from "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
+import {DataTypes} from "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
 import {ReserveConfiguration} from
-    "lib/Cod3x-Lend/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
-import {Errors} from "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
+    "lib/astera/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+import {Errors} from "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
 
 /// Balancer imports
 import {IVault as IBalancerVault} from
@@ -37,7 +37,7 @@ import {IAggregatorV3Interface} from "contracts/interfaces/IAggregatorV3Interfac
  * Balancer stable swap balance incentivized by sdcxUSD staking module.
  * @dev See: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212.
  * @dev IMPORTANT: Do not use as library. One CdxUsdIInterestRateStrategy per market only.
- * @author Cod3x - Beirao.
+ * @author Conclave - Beirao.
  */
 contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
     using WadRayMath for uint256;
@@ -127,7 +127,7 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
         int256 initialErrIValue,
         uint256 ki
     ) {
-        /// Cod3x Lend.
+        /// Astera.
         _asset = asset;
         _assetReserveType = false;
         _addressesProvider = ILendingPoolAddressesProvider(provider);

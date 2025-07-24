@@ -18,16 +18,16 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "test/helpers/Sort.sol";
 import {IRateProvider} from
     "lib/balancer-v3-monorepo/pkg/interfaces/contracts/solidity-utils/helpers/IRateProvider.sol";
-import {Oracle} from "lib/Cod3x-Lend/contracts/protocol/core/Oracle.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
+import {Oracle} from "lib/astera/contracts/protocol/core/Oracle.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
 import {ILendingPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolAddressesProvider.sol";
+    "lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
 import {ILendingPoolConfigurator} from
-    "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolConfigurator.sol";
-import {CdxUsdAToken} from "contracts/facilitators/cod3x_lend/token/CdxUsdAToken.sol";
+    "lib/astera/contracts/interfaces/ILendingPoolConfigurator.sol";
+import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
 import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/cod3x_lend/token/CdxUsdVariableDebtToken.sol";
-import {DataTypes} from "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
+    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+import {DataTypes} from "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
 import {DeploymentConstants} from "./DeploymentConstants.sol";
 
 import {console2} from "forge-std/console2.sol";
@@ -75,7 +75,7 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
 
         address stablePool = address(
             StablePoolFactory(address(stablePoolFactory)).create(
-                "Cod3x-USD-Pool",
+                "Astera-USD-Pool",
                 "CUP",
                 tokenConfigs,
                 amplificationParameter, // test only
@@ -84,7 +84,7 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
                 address(0),
                 false,
                 false,
-                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Cod3x-USD-Pool"), bytes("CUP"))))
+                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Astera-USD-Pool"), bytes("CUP"))))
             )
         );
 
@@ -164,9 +164,9 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             treasury: _extContractsForConfiguration.treasury,
             incentivesController: _extContractsForConfiguration.rewarder,
             underlyingAssetName: tmpSymbol,
-            aTokenName: string.concat("Cod3x Lend ", tmpSymbol),
+            aTokenName: string.concat("Astera ", tmpSymbol),
             aTokenSymbol: string.concat("cl", tmpSymbol),
-            variableDebtTokenName: string.concat("Cod3x Lend variable debt bearing ", tmpSymbol),
+            variableDebtTokenName: string.concat("Astera variable debt bearing ", tmpSymbol),
             variableDebtTokenSymbol: string.concat("variableDebt", tmpSymbol),
             params: "0x10"
         });
@@ -215,7 +215,7 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         );
 
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
-            .setCod3xReserveFactor(
+            .setAsteraReserveFactor(
             _cdxUsd, poolReserversConfig.reserveType, poolReserversConfig.reserveFactor
         );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)

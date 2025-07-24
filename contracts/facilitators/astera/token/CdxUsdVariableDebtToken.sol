@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.22;
 
-import {IVariableDebtToken} from "lib/Cod3x-Lend/contracts/interfaces/IVariableDebtToken.sol";
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
-import {SafeCast} from "lib/Cod3x-Lend/lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol";
-import {Errors} from "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
-import {IRewarder} from "lib/Cod3x-Lend/contracts/interfaces/IRewarder.sol";
+import {IVariableDebtToken} from "lib/astera/contracts/interfaces/IVariableDebtToken.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
+import {SafeCast} from "lib/astera/lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol";
+import {Errors} from "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
+import {IRewarder} from "lib/astera/contracts/interfaces/IRewarder.sol";
 import {VersionedInitializable} from
-    "lib/Cod3x-Lend/contracts/protocol/libraries/upgradeability/VersionedInitializable.sol";
+    "lib/astera/contracts/protocol/libraries/upgradeability/VersionedInitializable.sol";
 import {IncentivizedERC20} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
 
 /**
  * @title CdxUsdVariableDebtToken
  * @notice A variable debt token that tracks user borrowing positions with variable interest rates.
  * The token represents debt owed by users who have borrowed from the lending pool. The debt amount
  * fluctuates based on the variable interest rate applied.
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  */
 contract CdxUsdVariableDebtToken is
     IncentivizedERC20("DEBTTOKEN_IMPL", "DEBTTOKEN_IMPL", 0),

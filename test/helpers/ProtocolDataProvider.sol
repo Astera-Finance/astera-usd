@@ -2,21 +2,21 @@
 pragma solidity ^0.8.23;
 
 import {IERC20Detailed} from
-    "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {IAToken} from "lib/Cod3x-Lend/contracts/interfaces/IAToken.sol";
+    "lib/astera/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {IAToken} from "lib/astera/contracts/interfaces/IAToken.sol";
 import {ILendingPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolAddressesProvider.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
-import {IVariableDebtToken} from "lib/Cod3x-Lend/contracts/interfaces/IVariableDebtToken.sol";
+    "lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
+import {IVariableDebtToken} from "lib/astera/contracts/interfaces/IVariableDebtToken.sol";
 import {ReserveConfiguration} from
-    "lib/Cod3x-Lend/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+    "lib/astera/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from
-    "lib/Cod3x-Lend/contracts/protocol/libraries/configuration/UserConfiguration.sol";
-import {DataTypes} from "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
+    "lib/astera/contracts/protocol/libraries/configuration/UserConfiguration.sol";
+import {DataTypes} from "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
 
 /**
  * @title ProtocolDataProvider
- * @author Cod3x
+ * @author Conclave
  */
 contract ProtocolDataProvider {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

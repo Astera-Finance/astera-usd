@@ -17,12 +17,12 @@ import "contracts/interfaces/ICurves.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 /// vault imports
-import {ReaperBaseStrategyv4} from "lib/Cod3x-Vault/src/ReaperBaseStrategyv4.sol";
-import {ReaperVaultV2} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
+import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "lib/Cod3x-Vault/test/vault/mock/FeeControllerMock.sol";
+import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
 /// balancer V3 imports
 import {BalancerV3Router} from
@@ -53,7 +53,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
     IERC20[] public assets;
     IReliquary public reliquary;
     RollingRewarder public rewarder;
-    ReaperVaultV2 public cod3xVault;
+    ReaperVaultV2 public asteraVault;
     ScdxUsdVaultStrategy public strategy;
     IERC20 public mockRewardToken;
     TRouter public tRouter;
@@ -169,9 +169,9 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
             FeeControllerMock feeControllerMock = new FeeControllerMock();
             feeControllerMock.updateManagementFeeBPS(0);
 
-            cod3xVault = new ReaperVaultV2(
+            asteraVault = new ReaperVaultV2(
                 poolAdd,
-                "Staked Cod3x USD",
+                "Staked Astera USD",
                 "scdxUSD",
                 type(uint256).max,
                 0,
@@ -187,7 +187,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
 
             reliquary.transferFrom(address(this), address(strategy), RELIC_ID); // transfer Relic#1 to strategy.
             strategy.initialize(
-                address(cod3xVault),
+                address(asteraVault),
                 address(vaultV3),
                 address(balancerV3Router),
                 ownerArr1,
@@ -198,24 +198,24 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
                 address(poolAdd)
             );
 
-            // console2.log(address(cod3xVault));
+            // console2.log(address(asteraVault));
             // console2.log(address(vaultV3));
             // console2.log(address(cdxUSD));
             // console2.log(address(reliquary));
             // console2.log(address(poolAdd));
 
-            cod3xVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
+            asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
 
             address[] memory interactors2 = new address[](1);
             interactors2[0] = address(strategy);
             balancerV3Router.setInteractors(interactors2);
         }
 
-        // MAX approve "cod3xVault" by all users
+        // MAX approve "asteraVault" by all users
         for (uint160 i = 1; i <= 3; i++) {
             vm.startPrank(address(i)); // address(0x1) == address(1)
 
-            IERC20(poolAdd).approve(address(cod3xVault), type(uint256).max);
+            IERC20(poolAdd).approve(address(asteraVault), type(uint256).max);
 
             cdxUSD.approve(address(balancerV3Router), type(uint256).max);
             usdc.approve(address(balancerV3Router), type(uint256).max);
@@ -232,13 +232,13 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertEq(rewarder.distributionPeriod(), 3 days);
 
         // vault
-        assertEq(cod3xVault.tvlCap(), type(uint256).max);
-        assertEq(cod3xVault.managementFeeCapBPS(), 0);
-        assertEq(cod3xVault.tvlCap(), type(uint256).max);
-        assertEq(cod3xVault.totalAllocBPS(), 10_000);
-        assertEq(cod3xVault.totalAllocated(), 0);
-        assertEq(cod3xVault.emergencyShutdown(), false);
-        assertEq(address(cod3xVault.token()), poolAdd);
+        assertEq(asteraVault.tvlCap(), type(uint256).max);
+        assertEq(asteraVault.managementFeeCapBPS(), 0);
+        assertEq(asteraVault.tvlCap(), type(uint256).max);
+        assertEq(asteraVault.totalAllocBPS(), 10_000);
+        assertEq(asteraVault.totalAllocated(), 0);
+        assertEq(asteraVault.emergencyShutdown(), false);
+        assertEq(address(asteraVault.token()), poolAdd);
         assertEq(reliquary.isApprovedOrOwner(address(strategy), RELIC_ID), true);
 
         // strategy
@@ -248,7 +248,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertNotEq(strategy.cdxUsdIndex(), type(uint256).max);
         assertEq(strategy.minBPTAmountOut(), 1);
         assertEq(strategy.want(), poolAdd);
-        assertEq(strategy.vault(), address(cod3xVault));
+        assertEq(strategy.vault(), address(asteraVault));
         assertEq(address(strategy.swapper()), address(0));
     }
 
@@ -260,10 +260,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -278,7 +278,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         strategy.setMinBPTAmountOut(2);
         strategy.harvest();
 
-        assertEq(0, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(0, IERC20(poolAdd).balanceOf(address(asteraVault)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
             IERC20(poolAdd).balanceOf(address(reliquary)),
@@ -290,7 +290,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
 
@@ -311,10 +311,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, type(uint40).max);
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -333,10 +333,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -348,10 +348,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         strategy.setMinBPTAmountOut(2);
         strategy.harvest();
 
-        cod3xVault.setEmergencyShutdown(true);
-        assertEq(cod3xVault.emergencyShutdown(), true);
+        asteraVault.setEmergencyShutdown(true);
+        assertEq(asteraVault.emergencyShutdown(), true);
 
-        assertEq(0, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(0, IERC20(poolAdd).balanceOf(address(asteraVault)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
             IERC20(poolAdd).balanceOf(address(reliquary)),
@@ -364,7 +364,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertEq(0, IERC20(poolAdd).balanceOf(address(reliquary)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
-            IERC20(poolAdd).balanceOf(address(cod3xVault)),
+            IERC20(poolAdd).balanceOf(address(asteraVault)),
             1e14
         ); // 0,01%
 
@@ -374,7 +374,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
 
@@ -395,10 +395,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -407,8 +407,8 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         strategy.setMinBPTAmountOut(2);
         strategy.harvest();
 
-        cod3xVault.setEmergencyShutdown(true);
-        assertEq(cod3xVault.emergencyShutdown(), true);
+        asteraVault.setEmergencyShutdown(true);
+        assertEq(asteraVault.emergencyShutdown(), true);
 
         strategy.setMinBPTAmountOut(2);
         strategy.harvest();
@@ -416,7 +416,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertEq(0, IERC20(poolAdd).balanceOf(address(reliquary)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
-            IERC20(poolAdd).balanceOf(address(cod3xVault)),
+            IERC20(poolAdd).balanceOf(address(asteraVault)),
             1e14
         ); // 0,01%
 
@@ -426,7 +426,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
 
@@ -447,10 +447,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -468,7 +468,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertEq(0, IERC20(poolAdd).balanceOf(address(reliquary)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
-            IERC20(poolAdd).balanceOf(address(cod3xVault)),
+            IERC20(poolAdd).balanceOf(address(asteraVault)),
             1e14
         ); // 0,01%
 
@@ -478,7 +478,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
 
@@ -499,10 +499,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -513,8 +513,8 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
 
         strategy.setEmergencyExit();
         assertEq(strategy.emergencyExit(), true);
-        cod3xVault.setEmergencyShutdown(true);
-        assertEq(cod3xVault.emergencyShutdown(), true);
+        asteraVault.setEmergencyShutdown(true);
+        assertEq(asteraVault.emergencyShutdown(), true);
 
         strategy.setMinBPTAmountOut(2);
         strategy.harvest();
@@ -522,7 +522,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         assertEq(0, IERC20(poolAdd).balanceOf(address(reliquary)));
         assertApproxEqRel(
             amt + funding * deltaTime / rewarder.distributionPeriod(),
-            IERC20(poolAdd).balanceOf(address(cod3xVault)),
+            IERC20(poolAdd).balanceOf(address(asteraVault)),
             1e14
         ); // 0,01%
 
@@ -532,7 +532,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
         assertApproxEqRel(
@@ -552,10 +552,10 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         uint256 deltaTime = bound(_seedDeltaTime, 0, rewarder.distributionPeriod());
 
         vm.prank(userA);
-        cod3xVault.deposit(amt);
+        asteraVault.deposit(amt);
 
-        assertEq(amt, cod3xVault.balanceOf(userA));
-        assertEq(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)));
+        assertEq(amt, asteraVault.balanceOf(userA));
+        assertEq(amt, IERC20(poolAdd).balanceOf(address(asteraVault)));
 
         rewarder.fund(funding);
 
@@ -566,7 +566,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
 
         // full emergency
         strategy.setEmergencyExit();
-        cod3xVault.setEmergencyShutdown(true);
+        asteraVault.setEmergencyShutdown(true);
         reliquary.pause();
 
         skip(deltaTime);
@@ -576,7 +576,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
 
         assertEq(0, IERC20(poolAdd).balanceOf(address(reliquary)));
         assertEq(funding, IERC20(cdxUSD).balanceOf(address(rewarder)));
-        assertApproxEqRel(amt, IERC20(poolAdd).balanceOf(address(cod3xVault)), 1e14); // 0,01%
+        assertApproxEqRel(amt, IERC20(poolAdd).balanceOf(address(asteraVault)), 1e14); // 0,01%
 
         // withdraw
         uint256 balanceUserABefore = IERC20(poolAdd).balanceOf(userA);
@@ -584,7 +584,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         skip(7 hours); // For 100% profit degradation.
 
         vm.prank(userA);
-        cod3xVault.withdrawAll();
+        asteraVault.withdrawAll();
 
         assertApproxEqRel(0, IERC20(poolAdd).balanceOf(address(reliquary)), 1e14); // 0,01%
         assertEq(funding, IERC20(cdxUSD).balanceOf(address(rewarder)));

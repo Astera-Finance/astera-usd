@@ -12,10 +12,10 @@ import {
     CdxUsdVariableDebtToken,
     DataTypes
 } from "./DeploymentFixtures.s.sol";
-import {CdxUsdOracle} from "contracts/facilitators/cod3x_lend/oracle/CdxUSDOracle.sol";
+import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
 import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/cod3x_lend/interest_strategy/CdxUsdIInterestRateStrategy.sol";
+    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
 import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
 
 import {console2} from "forge-std/console2.sol";
@@ -30,8 +30,8 @@ contract InitUsdInLending is Script, DeploymentFixtures {
     address constant RELIQUARY = address(3); // Fill with deployed contract
 
     function run() public {
-        /// ========= Init cod3xUsd on cod3x lend =========
-        console2.log("====== Init cod3xUsd on cod3x lend ======");
+        /// ========= Init asteraUsd on Astera =========
+        console2.log("====== Init asteraUsd on Astera ======");
         initializeConstants();
         uint256 pk = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(pk);

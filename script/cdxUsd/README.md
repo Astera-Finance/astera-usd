@@ -1,6 +1,6 @@
-# Cod3x USD deployment
+# Astera USD deployment
 
-## Deploy Cod3x USD
+## Deploy Astera USD
 
 ### Default value
 
@@ -10,7 +10,7 @@ Find chain id and rpc: https://chainlist.org/
 
 ```java
 address cdxUsdUniversalAddress = address(0xC0d37000...);
-string name = "Cod3x USD";
+string name = "Astera USD";
 string symbol = "cdxUSD";
 address delegate = TBD;
 address treasury = TBD;

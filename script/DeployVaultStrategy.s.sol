@@ -6,8 +6,8 @@ import {DeploymentConstants} from "./DeploymentConstants.sol";
 import {FeeControllerMock} from "./FeeControllerMock.sol";
 import {BalancerV3Router} from
     "contracts/staking_module/vault_strategy/libraries/BalancerV3Router.sol";
-import {IFeeController} from "lib/Cod3x-Vault/src/interfaces/IFeeController.sol";
-import {ReaperVaultV2} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+import {IFeeController} from "lib/Astera-Vault/src/interfaces/IFeeController.sol";
+import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -50,7 +50,7 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
 
             IFeeController(FEE_CONTROLLER).updateManagementFeeBPS(0); // @audit you can remove this with the implementation in the gist.
 
-            ReaperVaultV2 cod3xVault = new ReaperVaultV2(
+            ReaperVaultV2 asteraVault = new ReaperVaultV2(
                 STABLE_POOL,
                 VAULT_NAME,
                 VAULT_SYMBOL,
@@ -73,7 +73,7 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
             // ownerArrStrategy[0] = multisignAdmin;
 
             strategy.initialize(
-                address(cod3xVault),
+                address(asteraVault),
                 address(balancerContracts.balVault),
                 address(balancerV3Router),
                 ownerArr1, // @audit put ownerArrStrategy
@@ -84,7 +84,7 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
                 address(STABLE_POOL)
             );
 
-            cod3xVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
+            asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
 
             //DEFAULT AMIND ROLE - balancer team shall do it // @audit you mean we should do it ? why balancer team ? we own balancerV3Router.
             address[] memory interactors2 = new address[](1);
@@ -99,10 +99,10 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
             // @audit ATTENTION - REVOKE msg.sender/deployer from DEFAULT_ADMIN_ROLE role!!!!!!! from ReaperVaultV2.sol.
 
             console2.log("BalancerV3Router deployed at", address(balancerV3Router));
-            console2.log("Cod3xVault deployed at", address(cod3xVault));
+            console2.log("AsteraVault deployed at", address(asteraVault));
             console2.log("Strategy deployed at", address(strategy));
 
-            return (address(balancerV3Router), address(cod3xVault), address(strategy));
+            return (address(balancerV3Router), address(asteraVault), address(strategy));
         }
     }
 }

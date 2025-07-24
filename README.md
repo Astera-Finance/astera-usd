@@ -1,6 +1,6 @@
-# Cod3x USD
+# Astera USD
 
-<p align="center">Cod3x-USD (cdxUSD) is the native Cod3x overcollateralized stablecoin integrated into <a href="https://github.com/Cod3x-Labs/Cod3x-Lend" style="color: #a77dff">Cod3x lend</a> market, multichain using <a href="https://layerzero.network/" style="color: #a77dff">LayerZero</a> and with a new innovative interest rate <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212" style="color: #a77dff">PID controle system</a>.
+<p align="center">Astera-USD (cdxUSD) is the native Astera overcollateralized stablecoin integrated into <a href="https://github.com/Astera-Finance/astera" style="color: #a77dff">Astera</a> market, multichain using <a href="https://layerzero.network/" style="color: #a77dff">LayerZero</a> and with a new innovative interest rate <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212" style="color: #a77dff">PID controle system</a>.
 </p>
 
 ## Quickstart
@@ -86,5 +86,5 @@ Please use `yarn fmt` before commiting.
 <br>
 
 <p align="center">
-  Join our community on <a href="https://discord.gg/ks3XVH3yg2" style="color: #a77dff">Discord</a> | Follow us on <a href="https://twitter.com/DeFiCod3x" style="color: #a77dff">Twitter</a>
+  Join our community on <a href="https://discord.gg/ks3XVH3yg2" style="color: #a77dff">Discord</a> | Follow us on <a href="https://twitter.com/DeFiAstera" style="color: #a77dff">Twitter</a>
 </p>

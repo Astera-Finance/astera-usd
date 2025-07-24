@@ -7,7 +7,7 @@ import "./DeploymentConstants.sol";
 import "contracts/tokens/CdxUSD.sol";
 
 contract CdxUsdGetBytecode is Script, DeploymentConstants {
-    string public name = "Cod3x USD";
+    string public name = "Astera USD";
     string public symbol = "cdxUSD";
     address public delegate = admin; // testnet address
     address public treasury = admin; // testnet address

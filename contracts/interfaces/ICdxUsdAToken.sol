@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {IAToken} from "lib/Cod3x-Lend/contracts/interfaces/IAToken.sol";
+import {IAToken} from "lib/astera/contracts/interfaces/IAToken.sol";
 import {ICdxUSDFacilitators} from "./ICdxUSDFacilitators.sol";
 
 /**
  * @title ICdxUsdAToken
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  * @notice Defines the basic interface of the CdxUsdAToken.
  */
 interface ICdxUsdAToken is IAToken, ICdxUSDFacilitators {

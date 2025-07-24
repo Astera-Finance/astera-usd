@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.22;
 
-/// Cod3x Vault imports
-import "lib/Cod3x-Vault/src/ReaperBaseStrategyv4.sol";
-import "lib/Cod3x-Vault/lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
+/// Astera Vault imports
+import "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
+import "lib/Astera-Vault/lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 /// Reliquary imports
 import "contracts/interfaces/IReliquary.sol";
@@ -20,8 +20,8 @@ import {BalancerV3Router} from "./libraries/BalancerV3Router.sol";
 
 /**
  * @title ScdxUsdVaultStrategy Contract.
- * @author Cod3x - Beirao.
- * @notice This contract is a Cod3x Vault strategy that defines the Staked cdxUSD logic.
+ * @author Conclave - Beirao.
+ * @notice This contract is a Astera Vault strategy that defines the Staked cdxUSD logic.
  * @dev Keepers need to call `setMinBPTAmountOut()` + `harvest()` every day.
  */
 contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
@@ -63,7 +63,7 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
 
     /**
      * @dev Initializes the strategy with core parameters and permissions.
-     * @param _code3xVault Address of the Cod3x vault contract.
+     * @param _code3xVault Address of the Astera vault contract.
      * @param _balancerVault Address of the Balancer vault contract.
      * @param _balancerV3Router Address of the BalancerV3Router contract.
      * @param _strategists Array of strategist addresses.

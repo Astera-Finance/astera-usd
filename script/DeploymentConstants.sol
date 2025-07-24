@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import "forge-std/console2.sol";
 import {ILendingPoolAddressesProvider} from
-    "../lib/Cod3x-Lend/contracts/interfaces/ILendingPoolAddressesProvider.sol";
+    "../lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
 
 struct ExtContractsForConfiguration {
     address treasury;
@@ -50,7 +50,7 @@ contract DeploymentConstants {
     address public constant keeper = 0xF29dA3595351dBFd0D647857C46F8D63Fc2e68C5; // TBD
 
     /// specific chains
-    //// cod3x lend
+    //// Astera
     /// ETH
     address public constant TREASURY = 0xfEfcb2fb19b9A70B30646Fdc1A0860Eb12F7ff8b; // tmp
     address public constant REWARDER = address(0);
@@ -123,7 +123,7 @@ contract DeploymentConstants {
         if (block.chainid == 1) {
             console2.log("-------- Mainnet ---------");
             if (LENDING_POOL_ADDRESSES_PROVIDER != address(0)) {
-                // Cod3xLend
+                // Astera
 
                 extContracts.rewarder = REWARDER;
                 extContracts.oracle = ORACLE;
@@ -167,7 +167,7 @@ contract DeploymentConstants {
         // Mainnet : Base
         else if (block.chainid == 8453) {
             console2.log("-------- Base Mainnet ---------");
-            // Cod3xLend
+            // Astera
             constantsTreasury = BASE_TREASURY;
             extContracts.rewarder = BASE_REWARDER;
             extContracts.oracle = BASE_ORACLE;
@@ -221,7 +221,7 @@ contract DeploymentConstants {
         else if (block.chainid == 84532) {
             console2.log("-------- Base Testnet ---------");
 
-            // // Cod3xLend
+            // // Astera
             // constantsTreasury = BASE_TREASURY;
             // extContracts.rewarder = BASE_REWARDER;
             // extContracts.oracle = BASE_ORACLE;

@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title Reliquary
- * @author Cod3x - Justin Bebis, Zokunei, Beirao, Goober
+ * @author Conclave - Justin Bebis, Zokunei, Beirao, Goober
  *
  * @notice This system is designed to manage incentives for deposited assets such that
  * behaviors can be programmed on a per-pool basis using maturity levels. Stake in a

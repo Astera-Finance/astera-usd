@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /**
  * @title ICdxUSDFacilitators
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  * @notice Defines the behavior of a CdxUSD Facilitator
  */
 interface ICdxUSDFacilitators {

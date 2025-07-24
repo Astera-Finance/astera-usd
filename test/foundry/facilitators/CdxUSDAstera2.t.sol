@@ -3,17 +3,17 @@ pragma solidity ^0.8.22;
 
 import "forge-std/console2.sol";
 
-// Cod3x Lend
+// Astera
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {ERC20} from "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
-import "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
-import "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
-import {AToken} from "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/AToken.sol";
+import {ERC20} from "lib/astera/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
+import "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
+import "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
+import {AToken} from "lib/astera/contracts/protocol/tokenization/ERC20/AToken.sol";
 import {VariableDebtToken} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
 
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
-import {MathUtils} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/MathUtils.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
+import {MathUtils} from "lib/astera/contracts/protocol/libraries/math/MathUtils.sol";
 import {TestCdxUSDAndLendAndStaking} from "test/helpers/TestCdxUSDAndLendAndStaking.sol";
 import {ERC20Mock} from "../../helpers/mocks/ERC20Mock.sol";
 
@@ -28,26 +28,26 @@ import "contracts/interfaces/ICurves.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 // vault
-import {ReaperBaseStrategyv4} from "lib/Cod3x-Vault/src/ReaperBaseStrategyv4.sol";
-import {ReaperVaultV2} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
+import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "lib/Cod3x-Vault/test/vault/mock/FeeControllerMock.sol";
+import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
 // CdxUSD
 import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
 import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/cod3x_lend/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUsdOracle} from "contracts/facilitators/cod3x_lend/oracle/CdxUSDOracle.sol";
-import {CdxUsdAToken} from "contracts/facilitators/cod3x_lend/token/CdxUsdAToken.sol";
+    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
+import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
+import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
 import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/cod3x_lend/token/CdxUsdVariableDebtToken.sol";
+    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
 
 import {IERC20Detailed} from
-    "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+    "lib/astera/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 
 import {BalancerV3Router} from
     "contracts/staking_module/vault_strategy/libraries/BalancerV3Router.sol";
@@ -67,7 +67,7 @@ event Borrow(
 
 event Repay(address indexed reserve, address indexed user, address indexed repayer, uint256 amount);
 
-contract TestCdxUSDCod3xLend2 is TestCdxUSDAndLendAndStaking {
+contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
     using WadRayMath for uint256;
 
     uint256 NR_OF_ASSETS = 3;

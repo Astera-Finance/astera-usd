@@ -3,63 +3,63 @@ pragma solidity ^0.8.22;
 
 import "forge-std/console2.sol";
 
-// Cod3x Lend
-import {ERC20} from "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
-import {Rewarder} from "lib/Cod3x-Lend/contracts/protocol/rewarder/lendingpool/Rewarder.sol";
-import {Oracle} from "lib/Cod3x-Lend/contracts/protocol/core/Oracle.sol";
-import {Treasury} from "lib/Cod3x-Lend/contracts/misc/Treasury.sol";
-import {WETHGateway} from "lib/Cod3x-Lend/contracts/misc/WETHGateway.sol";
+// Astera
+import {ERC20} from "lib/astera/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
+import {Rewarder} from "lib/astera/contracts/protocol/rewarder/lendingpool/Rewarder.sol";
+import {Oracle} from "lib/astera/contracts/protocol/core/Oracle.sol";
+import {Treasury} from "lib/astera/contracts/misc/Treasury.sol";
+import {WETHGateway} from "lib/astera/contracts/misc/WETHGateway.sol";
 import {ReserveLogic} from
-    "lib/Cod3x-Lend/contracts/protocol/core/lendingpool/logic/ReserveLogic.sol";
+    "lib/astera/contracts/protocol/core/lendingpool/logic/ReserveLogic.sol";
 import {GenericLogic} from
-    "lib/Cod3x-Lend/contracts/protocol/core/lendingpool/logic/GenericLogic.sol";
+    "lib/astera/contracts/protocol/core/lendingpool/logic/GenericLogic.sol";
 import {ValidationLogic} from
-    "lib/Cod3x-Lend/contracts/protocol/core/lendingpool/logic/ValidationLogic.sol";
+    "lib/astera/contracts/protocol/core/lendingpool/logic/ValidationLogic.sol";
 import {LendingPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/protocol/configuration/LendingPoolAddressesProvider.sol";
+    "lib/astera/contracts/protocol/configuration/LendingPoolAddressesProvider.sol";
 import {DefaultReserveInterestRateStrategy} from
-    "lib/Cod3x-Lend/contracts/protocol/core/interestRateStrategies/lendingpool/DefaultReserveInterestRateStrategy.sol";
+    "lib/astera/contracts/protocol/core/interestRateStrategies/lendingpool/DefaultReserveInterestRateStrategy.sol";
 import {PiReserveInterestRateStrategy} from
-    "lib/Cod3x-Lend/contracts/protocol/core/interestRateStrategies/lendingpool/PiReserveInterestRateStrategy.sol";
+    "lib/astera/contracts/protocol/core/interestRateStrategies/lendingpool/PiReserveInterestRateStrategy.sol";
 import {MiniPoolPiReserveInterestRateStrategy} from
-    "lib/Cod3x-Lend/contracts/protocol/core/interestRateStrategies/minipool/MiniPoolPiReserveInterestRateStrategy.sol";
-import {LendingPool} from "lib/Cod3x-Lend/contracts/protocol/core/lendingpool/LendingPool.sol";
+    "lib/astera/contracts/protocol/core/interestRateStrategies/minipool/MiniPoolPiReserveInterestRateStrategy.sol";
+import {LendingPool} from "lib/astera/contracts/protocol/core/lendingpool/LendingPool.sol";
 import {LendingPoolConfigurator} from
-    "lib/Cod3x-Lend/contracts/protocol/core/lendingpool/LendingPoolConfigurator.sol";
-import {MiniPool} from "lib/Cod3x-Lend/contracts/protocol/core/minipool/MiniPool.sol";
+    "lib/astera/contracts/protocol/core/lendingpool/LendingPoolConfigurator.sol";
+import {MiniPool} from "lib/astera/contracts/protocol/core/minipool/MiniPool.sol";
 import {MiniPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/protocol/configuration/MiniPoolAddressProvider.sol";
+    "lib/astera/contracts/protocol/configuration/MiniPoolAddressProvider.sol";
 import {MiniPoolConfigurator} from
-    "lib/Cod3x-Lend/contracts/protocol/core/minipool/MiniPoolConfigurator.sol";
-import {FlowLimiter} from "lib/Cod3x-Lend/contracts/protocol/core/minipool/FlowLimiter.sol";
-import {ATokensAndRatesHelper} from "lib/Cod3x-Lend/contracts/deployments/ATokensAndRatesHelper.sol";
-import {AToken} from "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/AToken.sol";
+    "lib/astera/contracts/protocol/core/minipool/MiniPoolConfigurator.sol";
+import {FlowLimiter} from "lib/astera/contracts/protocol/core/minipool/FlowLimiter.sol";
+import {ATokensAndRatesHelper} from "lib/astera/contracts/deployments/ATokensAndRatesHelper.sol";
+import {AToken} from "lib/astera/contracts/protocol/tokenization/ERC20/AToken.sol";
 import {ATokenERC6909} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC6909/ATokenERC6909.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC6909/ATokenERC6909.sol";
 import {VariableDebtToken} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
-import {MintableERC20} from "lib/Cod3x-Lend/contracts/mocks/tokens/MintableERC20.sol";
-import {WETH9Mocked} from "lib/Cod3x-Lend/contracts/mocks/tokens/WETH9Mocked.sol";
-import {MockAggregator} from "lib/Cod3x-Lend/contracts/mocks/oracle/MockAggregator.sol";
-import {MockReaperVault2} from "lib/Cod3x-Lend/contracts/mocks/tokens/MockVault.sol";
-import {ExternalContract} from "lib/Cod3x-Lend/contracts/mocks/tokens/ExternalContract.sol";
-import {IStrategy} from "lib/Cod3x-Lend/contracts/mocks/dependencies/IStrategy.sol";
-import {IExternalContract} from "lib/Cod3x-Lend/contracts/mocks/dependencies/IExternalContract.sol";
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
+import {MintableERC20} from "lib/astera/contracts/mocks/tokens/MintableERC20.sol";
+import {WETH9Mocked} from "lib/astera/contracts/mocks/tokens/WETH9Mocked.sol";
+import {MockAggregator} from "lib/astera/contracts/mocks/oracle/MockAggregator.sol";
+import {MockReaperVault2} from "lib/astera/contracts/mocks/tokens/MockVault.sol";
+import {ExternalContract} from "lib/astera/contracts/mocks/tokens/ExternalContract.sol";
+import {IStrategy} from "lib/astera/contracts/mocks/dependencies/IStrategy.sol";
+import {IExternalContract} from "lib/astera/contracts/mocks/dependencies/IExternalContract.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
 import {MiniPoolDefaultReserveInterestRateStrategy} from
-    "lib/Cod3x-Lend/contracts/protocol/core/interestRateStrategies/minipool/MiniPoolDefaultReserveInterestRate.sol";
-import {PriceOracle} from "lib/Cod3x-Lend/contracts/mocks/oracle/PriceOracle.sol";
+    "lib/astera/contracts/protocol/core/interestRateStrategies/minipool/MiniPoolDefaultReserveInterestRate.sol";
+import {PriceOracle} from "lib/astera/contracts/mocks/oracle/PriceOracle.sol";
 import {ILendingPoolConfigurator} from
-    "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolConfigurator.sol";
-import "lib/Cod3x-Lend/contracts/interfaces/ILendingPoolAddressesProvider.sol";
-import "lib/Cod3x-Lend/contracts/interfaces/IMiniPoolConfigurator.sol";
-import {IMiniPool} from "lib/Cod3x-Lend/contracts/interfaces/IMiniPool.sol";
+    "lib/astera/contracts/interfaces/ILendingPoolConfigurator.sol";
+import "lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
+import "lib/astera/contracts/interfaces/IMiniPoolConfigurator.sol";
+import {IMiniPool} from "lib/astera/contracts/interfaces/IMiniPool.sol";
 import {IMiniPoolAddressesProvider} from
-    "lib/Cod3x-Lend/contracts/interfaces/IMiniPoolAddressesProvider.sol";
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
-import {DataTypes} from "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
-import {Cod3xLendDataProvider} from "lib/Cod3x-Lend/contracts/misc/Cod3xLendDataProvider.sol";
-import {MockVaultUnit} from "lib/Cod3x-Lend/contracts/mocks/tokens/MockVaultUnit.sol";
+    "lib/astera/contracts/interfaces/IMiniPoolAddressesProvider.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
+import {DataTypes} from "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
+import {AsteraDataProvider} from "lib/astera/contracts/misc/AsteraDataProvider.sol";
+import {MockVaultUnit} from "lib/astera/contracts/mocks/tokens/MockVaultUnit.sol";
 import {ProtocolDataProvider} from "test/helpers/ProtocolDataProvider.sol";
 
 // Mock imports
@@ -101,9 +101,9 @@ import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20P
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Constants} from "test/helpers/Constants.sol";
 import {Sort} from "test/helpers/Sort.sol";
-import {CdxUsdAToken} from "contracts/facilitators/cod3x_lend/token/CdxUsdAToken.sol";
+import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
 import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/cod3x_lend/token/CdxUsdVariableDebtToken.sol";
+    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
 
 import {RollingRewarder} from "contracts/staking_module/reliquary/rewarders/RollingRewarder.sol";
 
@@ -160,7 +160,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
     // Protocol deployment variables
     uint256 providerId = 1;
-    string marketId = "Cod3x Lend Genesis Market";
+    string marketId = "Astera Genesis Market";
     uint256 cntr;
 
     address constant ETH_USD_SOURCE = 0xb7B9A39CC63f856b90B364911CC324dC46aC1770;
@@ -250,7 +250,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     }
 
     struct ConfigAddresses {
-        address cod3xLendDataProvider;
+        address asteraDataProvider;
         address stableStrategy;
         address volatileStrategy;
         address treasury;
@@ -277,7 +277,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         DefaultReserveInterestRateStrategy stableStrategy;
         DefaultReserveInterestRateStrategy volatileStrategy;
         PiReserveInterestRateStrategy piStrategy;
-        Cod3xLendDataProvider cod3xLendDataProvider;
+        AsteraDataProvider asteraDataProvider;
         ProtocolDataProvider protocolDataProvider;
         ATokensAndRatesHelper aTokensAndRatesHelper;
     }
@@ -370,11 +370,11 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             ERC20Mock(address(counterAsset)).mint(userC, INITIAL_COUNTER_ASSET_AMT);
         }
 
-        /// ======= Cod3x Lend deploy =======
+        /// ======= Astera deploy =======
         {
             deployedContracts = fixture_deployProtocol();
             configAddresses = ConfigAddresses(
-                address(deployedContracts.cod3xLendDataProvider),
+                address(deployedContracts.asteraDataProvider),
                 address(deployedContracts.stableStrategy),
                 address(deployedContracts.volatileStrategy),
                 address(deployedContracts.treasury),
@@ -425,7 +425,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         }
     }
 
-    // ======= Cod3x USD =======
+    // ======= Astera USD =======
 
     function fixture_configureCdxUsd(
         address _lendingPool,
@@ -503,9 +503,9 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             treasury: configAddresses.treasury,
             incentivesController: configAddresses.rewarder,
             underlyingAssetName: tmpSymbol,
-            aTokenName: string.concat("Cod3x Lend ", tmpSymbol),
+            aTokenName: string.concat("Astera ", tmpSymbol),
             aTokenSymbol: string.concat("cl", tmpSymbol),
-            variableDebtTokenName: string.concat("Cod3x Lend variable debt bearing ", tmpSymbol),
+            variableDebtTokenName: string.concat("Astera variable debt bearing ", tmpSymbol),
             variableDebtTokenSymbol: string.concat("variableDebt", tmpSymbol),
             params: "0x10"
         });
@@ -531,7 +531,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         lendingPoolAddressesProvider.setPoolAdmin(owner);
     }
 
-    // ======= Cod3x Lend =======
+    // ======= Astera =======
 
     function uintToString(uint256 value) public pure returns (string memory) {
         // Special case for 0
@@ -620,9 +620,9 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             address(commonContracts.oracle)
         );
         vm.label(address(commonContracts.oracle), "Oracle");
-        deployedContracts.cod3xLendDataProvider =
-            new Cod3xLendDataProvider(ETH_USD_SOURCE, USDC_USD_SOURCE);
-        deployedContracts.cod3xLendDataProvider.setLendingPoolAddressProvider(
+        deployedContracts.asteraDataProvider =
+            new AsteraDataProvider(ETH_USD_SOURCE, USDC_USD_SOURCE);
+        deployedContracts.asteraDataProvider.setLendingPoolAddressProvider(
             address(deployedContracts.lendingPoolAddressesProvider)
         );
         deployedContracts.stableStrategy = new DefaultReserveInterestRateStrategy(
@@ -706,12 +706,12 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         lendingPoolConfiguratorProxy.setPoolPause(false);
 
         commonContracts.aTokens =
-            fixture_getATokens(tokens, Cod3xLendDataProvider(configAddresses.cod3xLendDataProvider));
+            fixture_getATokens(tokens, AsteraDataProvider(configAddresses.asteraDataProvider));
         commonContracts.aTokensWrapper = fixture_getATokensWrapper(
-            tokens, Cod3xLendDataProvider(configAddresses.cod3xLendDataProvider)
+            tokens, AsteraDataProvider(configAddresses.asteraDataProvider)
         );
         commonContracts.variableDebtTokens = fixture_getVarDebtTokens(
-            tokens, Cod3xLendDataProvider(configAddresses.cod3xLendDataProvider)
+            tokens, AsteraDataProvider(configAddresses.asteraDataProvider)
         );
         for (uint256 idx; idx < tokens.length; idx++) {
             vm.label(
@@ -753,9 +753,9 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
                 treasury: configAddresses.treasury,
                 incentivesController: configAddresses.rewarder,
                 underlyingAssetName: tmpSymbol,
-                aTokenName: string.concat("Cod3x Lend ", tmpSymbol),
+                aTokenName: string.concat("Astera ", tmpSymbol),
                 aTokenSymbol: string.concat("cl", tmpSymbol),
-                variableDebtTokenName: string.concat("Cod3x Lend variable debt bearing ", tmpSymbol),
+                variableDebtTokenName: string.concat("Astera variable debt bearing ", tmpSymbol),
                 variableDebtTokenSymbol: string.concat("variableDebt", tmpSymbol),
                 params: "0x10"
             });
@@ -785,11 +785,11 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
     function fixture_getATokens(
         address[] memory _tokens,
-        Cod3xLendDataProvider cod3xLendDataProvider
+        AsteraDataProvider asteraDataProvider
     ) public view returns (AToken[] memory _aTokens) {
         _aTokens = new AToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
-            (address _aTokenAddress,) = cod3xLendDataProvider.getLpTokens(
+            (address _aTokenAddress,) = asteraDataProvider.getLpTokens(
                 _tokens[idx], (_tokens[idx] == address(cdxUsd) ? false : true)
             );
             // console2.log("AToken%s: %s", idx, _aTokenAddress);
@@ -799,11 +799,11 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
     function fixture_getATokensWrapper(
         address[] memory _tokens,
-        Cod3xLendDataProvider cod3xLendDataProvider
+        AsteraDataProvider asteraDataProvider
     ) public view returns (AToken[] memory _aTokensW) {
         _aTokensW = new AToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
-            (address _aTokenAddress,) = cod3xLendDataProvider.getLpTokens(
+            (address _aTokenAddress,) = asteraDataProvider.getLpTokens(
                 _tokens[idx], (_tokens[idx] == address(cdxUsd) ? false : true)
             );
             // console2.log("AToken%s: %s", idx, _aTokenAddress);
@@ -813,11 +813,11 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
     function fixture_getVarDebtTokens(
         address[] memory _tokens,
-        Cod3xLendDataProvider cod3xLendDataProvider
+        AsteraDataProvider asteraDataProvider
     ) public returns (VariableDebtToken[] memory _varDebtTokens) {
         _varDebtTokens = new VariableDebtToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
-            (, address _variableDebtToken) = cod3xLendDataProvider.getLpTokens(
+            (, address _variableDebtToken) = asteraDataProvider.getLpTokens(
                 _tokens[idx], _tokens[idx] == address(cdxUsd) ? false : true
             );
             // console2.log("Atoken address", _variableDebtToken);
@@ -1028,7 +1028,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
         address stablePool = address(
             StablePoolFactory(address(composableStablePoolFactoryV3)).create(
-                "Cod3x-USD-Pool",
+                "Astera-USD-Pool",
                 "CUP",
                 tokenConfigs,
                 200, // test only
@@ -1037,7 +1037,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
                 address(0),
                 false,
                 false,
-                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Cod3x-USD-Pool"), bytes("CUP"))))
+                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Astera-USD-Pool"), bytes("CUP"))))
             )
         );
 

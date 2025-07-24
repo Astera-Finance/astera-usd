@@ -4,8 +4,8 @@ pragma solidity ^0.8.22;
 /// Reliquary imports
 import "contracts/interfaces/IReliquary.sol";
 
-/// Cod3x imports
-import {ReaperVaultV2 as Cod3xVault} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+/// Astera imports
+import {ReaperVaultV2 as AsteraVault} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 
@@ -27,7 +27,7 @@ import {BalancerV3Router} from
 
 /**
  * @title Zap
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  * @notice Zap all possible scdxUSD operations.
  */
 contract Zap is Pausable, Ownable {
@@ -40,8 +40,8 @@ contract Zap is Pausable, Ownable {
 
     /// @dev Reference to the Balancer vault contract for pool interactions.
     IBalancerVault public immutable balancerVault;
-    /// @dev Reference to the Cod3x vault contract where scdxUSD is deposited.
-    Cod3xVault public immutable cod3xVault;
+    /// @dev Reference to the Astera vault contract where scdxUSD is deposited.
+    AsteraVault public immutable asteraVault;
     /// @dev Reference to the vault strategy contract that manages scdxUSD deposits.
     ScdxUsdVaultStrategy public immutable strategy;
     /// @dev Reference to the Reliquary staking contract.
@@ -82,7 +82,7 @@ contract Zap is Pausable, Ownable {
     /**
      * @dev Initializes the contract with core dependencies and configuration.
      * @param _balancerVault Address of the Balancer vault contract.
-     * @param _cod3xVault Address of the Cod3x vault contract.
+     * @param _asteraVault Address of the Astera vault contract.
      * @param _balancerV3Router Address of the BalancerV3Router contract.
      * @param _strategy Address of the vault strategy contract.
      * @param _reliquary Address of the Reliquary staking contract.
@@ -93,7 +93,7 @@ contract Zap is Pausable, Ownable {
      */
     constructor(
         address _balancerVault,
-        address _cod3xVault,
+        address _asteraVault,
         address _balancerV3Router,
         address _strategy,
         address _reliquary,
@@ -103,7 +103,7 @@ contract Zap is Pausable, Ownable {
         address _guardian
     ) Ownable(_owner) {
         balancerVault = IBalancerVault(_balancerVault);
-        cod3xVault = Cod3xVault(_cod3xVault);
+        asteraVault = AsteraVault(_asteraVault);
         strategy = ScdxUsdVaultStrategy(_strategy);
         reliquary = IReliquary(_reliquary);
         cdxUsd = IERC20(_cdxUsd);
@@ -128,10 +128,10 @@ contract Zap is Pausable, Ownable {
             if (ScdxUsdVaultStrategy(_strategy).want() != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (ScdxUsdVaultStrategy(_strategy).vault() != _cod3xVault) {
+            if (ScdxUsdVaultStrategy(_strategy).vault() != _asteraVault) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (address(Cod3xVault(_cod3xVault).token()) != balancerPool) {
+            if (address(AsteraVault(_asteraVault).token()) != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
             if (address(ScdxUsdVaultStrategy(_strategy).cdxUSD()) != _cdxUsd) {
@@ -155,12 +155,12 @@ contract Zap is Pausable, Ownable {
         {
             IERC20(_cdxUsd).approve(_balancerVault, type(uint256).max);
             IERC20(_counterAsset).approve(_balancerVault, type(uint256).max);
-            IERC20(_cod3xVault).approve(_balancerVault, type(uint256).max);
+            IERC20(_asteraVault).approve(_balancerVault, type(uint256).max);
 
             IERC20(_cdxUsd).approve(_balancerV3Router, type(uint256).max);
             IERC20(_counterAsset).approve(_balancerV3Router, type(uint256).max);
 
-            IERC20(balancerPool).approve(_cod3xVault, type(uint256).max);
+            IERC20(balancerPool).approve(_asteraVault, type(uint256).max);
             IERC20(balancerPool).approve(_reliquary, type(uint256).max);
             IERC20(balancerPool).approve(_balancerV3Router, type(uint256).max);
         }
@@ -198,7 +198,7 @@ contract Zap is Pausable, Ownable {
     /**
      * @notice Zap all staking operations into a simple tx:
      *         - join balancer pool
-     *         - deposit into cod3x vault
+     *         - deposit into astera vault
      *         - send scdxUSD to user
      * @dev Users must first approve the amount they wish to send.
      * @param _cdxUsdAmt cdxUSD amount to supply.
@@ -228,18 +228,18 @@ contract Zap is Pausable, Ownable {
             balancerPool, amountsToAdd_, 0 /* minBPTAmountOut */
         );
 
-        /// Cod3x Vault deposit
-        cod3xVault.depositAll();
+        /// Astera Vault deposit
+        asteraVault.depositAll();
 
         /// Send cdxUSD
-        uint256 scdxUsdBalanceOut = cod3xVault.balanceOf(address(this));
+        uint256 scdxUsdBalanceOut = asteraVault.balanceOf(address(this));
         if (scdxUsdBalanceOut < _minScdxUsdOut) revert Zap__SLIPPAGE_CHECK_FAILED();
-        cod3xVault.transfer(_to, scdxUsdBalanceOut); // SafeERC20 not needed
+        asteraVault.transfer(_to, scdxUsdBalanceOut); // SafeERC20 not needed
     }
 
     /**
      * @notice Zap all unstaking operations into a simple tx:
-     *         - withdraw from cod3x vault
+     *         - withdraw from astera vault
      *         - exit balancer pool
      *         - send token(s) to user
      * @dev Users must first approve the amount they wish to send.
@@ -258,10 +258,10 @@ contract Zap is Pausable, Ownable {
             revert Zap__WRONG_INPUT();
         }
 
-        cod3xVault.transferFrom(msg.sender, address(this), _scdxUsdAmount);
+        asteraVault.transferFrom(msg.sender, address(this), _scdxUsdAmount);
 
-        /// Cod3x Vault withdraw
-        cod3xVault.withdraw(_scdxUsdAmount);
+        /// Astera Vault withdraw
+        asteraVault.withdraw(_scdxUsdAmount);
 
         /// withdraw pool
         balancerV3Router.removeLiquiditySingleTokenExactIn(

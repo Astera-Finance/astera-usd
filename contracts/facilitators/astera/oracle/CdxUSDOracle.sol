@@ -8,7 +8,7 @@ import {IAggregatorV3Interface} from "contracts/interfaces/IAggregatorV3Interfac
  * @notice A price feed oracle for CdxUSD that maintains a fixed 1:1 peg to USD.
  * @dev Implements a Chainlink-compatible interface with 8 decimal precision. The price is hardcoded
  * to 1 USD.
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  */
 contract CdxUsdOracle is IAggregatorV3Interface {
     /// @dev The fixed price of 1 CdxUSD in USD, with 8 decimal precision (1.00000000).

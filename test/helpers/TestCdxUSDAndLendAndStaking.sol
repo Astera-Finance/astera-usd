@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
 
-// Cod3x Lend
+// Astera
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {ERC20} from "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
-import "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
-import "lib/Cod3x-Lend/contracts/protocol/libraries/types/DataTypes.sol";
-import {AToken} from "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/AToken.sol";
+import {ERC20} from "lib/astera/contracts/dependencies/openzeppelin/contracts/ERC20.sol";
+import "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
+import "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
+import {AToken} from "lib/astera/contracts/protocol/tokenization/ERC20/AToken.sol";
 import {VariableDebtToken} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/VariableDebtToken.sol";
 
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
-import {MathUtils} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/MathUtils.sol";
-import {Cod3xLendDataProvider} from "lib/Cod3x-Lend/contracts/misc/Cod3xLendDataProvider.sol";
-// import {ReserveBorrowConfiguration} from  "lib/Cod3x-Lend/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
+import {MathUtils} from "lib/astera/contracts/protocol/libraries/math/MathUtils.sol";
+import {AsteraDataProvider} from "lib/astera/contracts/misc/AsteraDataProvider.sol";
+// import {ReserveBorrowConfiguration} from  "lib/astera/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 
 // Balancer
 import "forge-std/console2.sol";
@@ -32,21 +32,21 @@ import "contracts/interfaces/ICurves.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 // vault
-import {ReaperBaseStrategyv4} from "lib/Cod3x-Vault/src/ReaperBaseStrategyv4.sol";
-import {ReaperVaultV2} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
+import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "lib/Cod3x-Vault/test/vault/mock/FeeControllerMock.sol";
+import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
 // CdxUSD
 import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
 import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/cod3x_lend/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUsdOracle} from "contracts/facilitators/cod3x_lend/oracle/CdxUSDOracle.sol";
-import {CdxUsdAToken} from "contracts/facilitators/cod3x_lend/token/CdxUsdAToken.sol";
+    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
+import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
+import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
 import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/cod3x_lend/token/CdxUsdVariableDebtToken.sol";
+    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
 
 /// balancer V3 imports
@@ -82,7 +82,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
     IERC20[] public assets;
     IReliquary public reliquary;
     RollingRewarder public rewarder;
-    ReaperVaultV2 public cod3xVault;
+    ReaperVaultV2 public asteraVault;
     ScdxUsdVaultStrategy public strategy;
     IERC20 public mockRewardToken;
     BalancerV3Router public balancerV3Router;
@@ -194,9 +194,9 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             FeeControllerMock feeControllerMock = new FeeControllerMock();
             feeControllerMock.updateManagementFeeBPS(0);
 
-            cod3xVault = new ReaperVaultV2(
+            asteraVault = new ReaperVaultV2(
                 poolAdd,
-                "Staked Cod3x USD",
+                "Staked Astera USD",
                 "scdxUSD",
                 type(uint256).max,
                 0,
@@ -213,11 +213,11 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             address[] memory ownerArr2 = new address[](2);
             ownerArr2[0] = address(strategy);
             ownerArr2[1] = address(this);
-            balancerV3Router = new BalancerV3Router(address(cod3xVault), address(this), ownerArr2);
+            balancerV3Router = new BalancerV3Router(address(asteraVault), address(this), ownerArr2);
 
             reliquary.transferFrom(address(this), address(strategy), RELIC_ID); // transfer Relic#1 to strategy.
             strategy.initialize(
-                address(cod3xVault),
+                address(asteraVault),
                 address(vaultV3),
                 address(balancerV3Router),
                 ownerArr1,
@@ -228,16 +228,16 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
                 address(poolAdd)
             );
 
-            // console2.log(address(cod3xVault));
+            // console2.log(address(asteraVault));
             // console2.log(address(vaultV3));
             // console2.log(address(cdxUSD));
             // console2.log(address(reliquary));
             // console2.log(address(poolAdd));
 
-            cod3xVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
+            asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
         }
 
-        // ======= cdxUSD Cod3x Lend dependencies deploy and configure =======
+        // ======= cdxUSD Astera dependencies deploy and configure =======
         {
             cdxUsdAToken = new CdxUsdAToken();
             cdxUsdVariableDebtToken = new CdxUsdVariableDebtToken();
@@ -273,11 +273,11 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
 
             cdxUsd.addFacilitator(
                 deployedContracts.lendingPool.getReserveData(address(cdxUsd), false).aTokenAddress,
-                "Cod3x Lend",
+                "Astera",
                 DEFAULT_CAPACITY
             );
             // configAddresses = ConfigAddresses(
-            //     address(deployedContracts.cod3xLendDataProvider),
+            //     address(deployedContracts.asteraDataProvider),
             //     address(deployedContracts.stableStrategy),
             //     address(deployedContracts.volatileStrategy),
             //     address(deployedContracts.treasury),
@@ -287,7 +287,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
 
             tokens.push(address(cdxUsd));
             commonContracts.aTokens = fixture_getATokens(
-                tokens, Cod3xLendDataProvider(configAddresses.cod3xLendDataProvider)
+                tokens, AsteraDataProvider(configAddresses.asteraDataProvider)
             );
 
             erc20Tokens.push(ERC20(address(cdxUsd)));
@@ -302,10 +302,10 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             variableDebtTokens.push(VariableDebtToken(_variableDebtToken));
         }
 
-        // MAX approve "cod3xVault" by all users
+        // MAX approve "asteraVault" by all users
         for (uint160 i = 1; i <= 3; i++) {
             vm.prank(address(i)); // address(0x1) == address(1)
-            IERC20(poolAdd).approve(address(cod3xVault), type(uint256).max);
+            IERC20(poolAdd).approve(address(asteraVault), type(uint256).max);
         }
     }
 }

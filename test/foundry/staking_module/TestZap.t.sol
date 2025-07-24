@@ -17,12 +17,12 @@ import "contracts/interfaces/ICurves.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 /// vault imports
-import {ReaperBaseStrategyv4} from "lib/Cod3x-Vault/src/ReaperBaseStrategyv4.sol";
-import {ReaperVaultV2} from "lib/Cod3x-Vault/src/ReaperVaultV2.sol";
+import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
+import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
 import {ScdxUsdVaultStrategy} from
     "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "lib/Cod3x-Vault/test/vault/mock/FeeControllerMock.sol";
+import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
 /// balancer V3 imports
 import {BalancerV3Router} from
@@ -58,7 +58,7 @@ contract TestZap is TestCdxUSD, ERC721Holder {
     IERC20[] public assets;
     IReliquary public reliquary;
     RollingRewarder public rewarder;
-    ReaperVaultV2 public cod3xVault;
+    ReaperVaultV2 public asteraVault;
     ScdxUsdVaultStrategy public strategy;
     IERC20 public mockRewardToken;
     Zap public zap;
@@ -175,9 +175,9 @@ contract TestZap is TestCdxUSD, ERC721Holder {
             FeeControllerMock feeControllerMock = new FeeControllerMock();
             feeControllerMock.updateManagementFeeBPS(0);
 
-            cod3xVault = new ReaperVaultV2(
+            asteraVault = new ReaperVaultV2(
                 poolAdd,
-                "Staked Cod3x USD",
+                "Staked Astera USD",
                 "scdxUSD",
                 type(uint256).max,
                 0,
@@ -193,7 +193,7 @@ contract TestZap is TestCdxUSD, ERC721Holder {
 
             reliquary.transferFrom(address(this), address(strategy), RELIC_ID); // transfer Relic#1 to strategy.
             strategy.initialize(
-                address(cod3xVault),
+                address(asteraVault),
                 address(vaultV3),
                 address(balancerV3Router),
                 ownerArr1,
@@ -204,20 +204,20 @@ contract TestZap is TestCdxUSD, ERC721Holder {
                 address(poolAdd)
             );
 
-            // console2.log(address(cod3xVault));
+            // console2.log(address(asteraVault));
             // console2.log(address(vaultV3));
             // console2.log(address(cdxUSD));
             // console2.log(address(reliquary));
             // console2.log(address(poolAdd));
 
-            cod3xVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
+            asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
         }
 
         /// ========== Zap Deploy ===========
         {
             zap = new Zap(
                 address(vaultV3),
-                address(cod3xVault),
+                address(asteraVault),
                 address(balancerV3Router),
                 address(strategy),
                 address(reliquary),
@@ -233,16 +233,16 @@ contract TestZap is TestCdxUSD, ERC721Holder {
             balancerV3Router.setInteractors(interactors2);
         }
 
-        // MAX approve `cod3xVault` and `zap` by all users
+        // MAX approve `asteraVault` and `zap` by all users
         for (uint160 i = 1; i <= 4; i++) {
             vm.startPrank(address(i)); // address(0x1) == address(1)
 
-            IERC20(poolAdd).approve(address(cod3xVault), type(uint256).max);
+            IERC20(poolAdd).approve(address(asteraVault), type(uint256).max);
 
             IERC20(cdxUSD).approve(address(zap), type(uint256).max);
             IERC20(usdc).approve(address(zap), type(uint256).max);
 
-            cod3xVault.approve(address(zap), type(uint256).max);
+            asteraVault.approve(address(zap), type(uint256).max);
 
             IERC20(poolAdd).approve(address(reliquary), type(uint256).max);
 
@@ -268,7 +268,7 @@ contract TestZap is TestCdxUSD, ERC721Holder {
         vm.prank(userB);
         zap.zapInStakedCdxUSD(amtCdxusd, amtUsdc, userC, 1);
 
-        assertApproxEqRel(cod3xVault.balanceOf(userC), amtCdxusd + scaleDecimal(amtUsdc), 1e15); // 0,1%
+        assertApproxEqRel(asteraVault.balanceOf(userC), amtCdxusd + scaleDecimal(amtUsdc), 1e15); // 0,1%
 
         assertEq(IERC20(cdxUSD).balanceOf(userB), balanceBeforeCdxusd - amtCdxusd);
         assertEq(IERC20(usdc).balanceOf(userB), balanceBeforeUsdc - amtUsdc);
@@ -293,7 +293,7 @@ contract TestZap is TestCdxUSD, ERC721Holder {
         zap.zapInStakedCdxUSD(amtCdxusd, amtUsdc, userC, 1);
         vm.startPrank(userC);
         zap.zapOutStakedCdxUSD(
-            cod3xVault.balanceOf(userC) / 10, address(tokenToWithdraw), 1, address(999)
+            asteraVault.balanceOf(userC) / 10, address(tokenToWithdraw), 1, address(999)
         );
         vm.stopPrank();
 

@@ -8,7 +8,7 @@ import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
 
 /**
  * @title MockFlashBorrower
- * @author Cod3x
+ * @author Conclave
  * @dev This is purely an unsafe mock testing contract. Do not use in production.
  */
 contract MockFlashBorrower is IERC3156FlashBorrower {

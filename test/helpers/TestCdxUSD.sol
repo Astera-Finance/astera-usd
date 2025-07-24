@@ -168,7 +168,7 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
 
         address stablePool = address(
             StablePoolFactory(address(composableStablePoolFactoryV3)).create(
-                "Cod3x-USD-Pool",
+                "Astera-USD-Pool",
                 "CUP",
                 tokenConfigs,
                 amplificationParameter, // test only
@@ -177,7 +177,7 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
                 address(0),
                 false,
                 false,
-                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Cod3x-USD-Pool"), bytes("CUP"))))
+                bytes32(keccak256(abi.encode(tokenConfigs, bytes("Astera-USD-Pool"), bytes("CUP"))))
             )
         );
 

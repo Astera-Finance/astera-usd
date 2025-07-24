@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.22;
 
-import {PercentageMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/PercentageMath.sol";
+import {PercentageMath} from "lib/astera/contracts/protocol/libraries/math/PercentageMath.sol";
 import {IERC3156FlashBorrower} from "@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol";
 import {ICdxUSD} from "contracts/interfaces/ICdxUSD.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ICdxUSDFacilitators} from "contracts/interfaces/ICdxUSDFacilitators.sol";
-import {Errors} from "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
+import {Errors} from "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
 
 /**
  * @title A contract enabling flash minting of CdxUSD tokens.
- * @author Cod3x - Beirao
+ * @author Conclave - Beirao
  * @notice Allows users to flash mint CdxUSD tokens by implementing EIP-3156.
  * @dev Based on EIP-3156 reference implementation and Aave's GHO flash minter.
  */

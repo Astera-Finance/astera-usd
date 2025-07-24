@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.22;
 
-import {ILendingPool} from "lib/Cod3x-Lend/contracts/interfaces/ILendingPool.sol";
-import {IAToken} from "lib/Cod3x-Lend/contracts/interfaces/IAToken.sol";
-import {IRewarder} from "lib/Cod3x-Lend/contracts/interfaces/IRewarder.sol";
+import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
+import {IAToken} from "lib/astera/contracts/interfaces/IAToken.sol";
+import {IRewarder} from "lib/astera/contracts/interfaces/IRewarder.sol";
 
-import {WadRayMath} from "lib/Cod3x-Lend/contracts/protocol/libraries/math/WadRayMath.sol";
-import {Errors} from "lib/Cod3x-Lend/contracts/protocol/libraries/helpers/Errors.sol";
+import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
+import {Errors} from "lib/astera/contracts/protocol/libraries/helpers/Errors.sol";
 import {VersionedInitializable} from
-    "lib/Cod3x-Lend/contracts/protocol/libraries/upgradeability/VersionedInitializable.sol";
+    "lib/astera/contracts/protocol/libraries/upgradeability/VersionedInitializable.sol";
 import {IncentivizedERC20} from
-    "lib/Cod3x-Lend/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
+    "lib/astera/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
 import {ICdxUSD} from "contracts/interfaces/ICdxUSD.sol";
 import {ICdxUsdAToken} from "contracts/interfaces/ICdxUsdAToken.sol";
 import {ICdxUSDFacilitators} from "contracts/interfaces/ICdxUSDFacilitators.sol";
-import {IERC20} from "lib/Cod3x-Lend/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC20} from "lib/astera/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
 import {CdxUsdVariableDebtToken} from "./CdxUsdVariableDebtToken.sol";
 import {IRollingRewarder} from "contracts/interfaces/IRollingRewarder.sol";
 
 /**
  * @title CdxUSD A ERC20 AToken
- * @notice Implementation of the interest bearing token for the Cod3x Lend protocol.
- * @author Cod3x - Beirao
- * @dev This contract represents the interest-bearing version of CdxUSD in the Cod3x Lend protocol.
+ * @notice Implementation of the interest bearing token for the Astera protocol.
+ * @author Conclave - Beirao
+ * @dev This contract represents the interest-bearing version of CdxUSD in the Astera protocol.
  * It tracks user deposits and accrues interest over time.
  */
 contract CdxUsdAToken is
@@ -197,7 +197,7 @@ contract CdxUsdAToken is
      * @notice Mints tokens to protocol treasury.
      * @dev Only callable by LendingPool.
      */
-    function mintToCod3xTreasury(uint256, uint256) external override onlyLendingPool {
+    function mintToAsteraTreasury(uint256, uint256) external override onlyLendingPool {
         revert("OPERATION_NOT_SUPPORTED");
     }
 
