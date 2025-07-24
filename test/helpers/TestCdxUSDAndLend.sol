@@ -166,6 +166,11 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     address constant ETH_USD_SOURCE = 0xb7B9A39CC63f856b90B364911CC324dC46aC1770;
     address constant USDC_USD_SOURCE = 0x16a9FA2FDa030272Ce99B29CF780dFA30361E0f3;
 
+    uint256 constant USDC_OFFSET = 0;
+    uint256 constant WBTC_OFFSET = 1;
+    uint256 constant WETH_OFFSET = 2;
+    uint256 constant DAI_OFFSET = 3;
+
     address public userA = address(0x1);
     address public userB = address(0x2);
     address public userC = address(0x3);
@@ -332,7 +337,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         vm.deal(userB, INITIAL_ETH_MINT);
         vm.deal(userC, INITIAL_ETH_MINT);
 
-        tRouter = new TRouter();
+        tRouter = new TRouter(vaultV3);
 
         /// ======= cdxUSD deploy =======
         {
@@ -620,7 +625,6 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         deployedContracts.cod3xLendDataProvider.setLendingPoolAddressProvider(
             address(deployedContracts.lendingPoolAddressesProvider)
         );
-        commonContracts.wETHGateway = new WETHGateway(weth);
         deployedContracts.stableStrategy = new DefaultReserveInterestRateStrategy(
             deployedContracts.lendingPoolAddressesProvider,
             sStrat[0],
@@ -683,8 +687,6 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             BASE_CURRENCY_UNIT,
             _lendingPoolAddressesProvider
         );
-
-        commonContracts.wETHGateway = new WETHGateway(weth);
     }
 
     function fixture_configureProtocol(
@@ -720,6 +722,8 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
                 string.concat("VariableDebtToken ", uintToString(idx))
             );
         }
+        commonContracts.wETHGateway =
+            new WETHGateway(address(commonContracts.aTokensWrapper[WETH_OFFSET]));
     }
 
     function fixture_configureReserves(

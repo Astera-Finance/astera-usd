@@ -72,7 +72,7 @@ contract TestStakingModule is TestCdxUSD, ERC721Holder {
         super.setUp();
         vm.selectFork(forkIdEth);
 
-        tRouter = new TRouter();
+        tRouter = new TRouter(vaultV3);
         vm.startPrank(userA);
         cdxUSD.approve(address(tRouter), type(uint256).max);
         usdc.approve(address(tRouter), type(uint256).max);
