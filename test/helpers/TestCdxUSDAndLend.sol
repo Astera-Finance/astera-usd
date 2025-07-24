@@ -337,7 +337,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         vm.deal(userB, INITIAL_ETH_MINT);
         vm.deal(userC, INITIAL_ETH_MINT);
 
-        tRouter = new TRouter();
+        tRouter = new TRouter(vaultV3);
 
         /// ======= cdxUSD deploy =======
         {

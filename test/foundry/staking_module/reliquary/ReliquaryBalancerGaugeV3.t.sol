@@ -44,6 +44,7 @@ contract ReliquaryBalancerGaugeV3 is ERC721Holder, Test {
     address statasGho = address(0xC71Ea051a5F82c67ADcF634c36FFE6334793D24C); // Statas
     address statasUsdc = address(0xD4fa2D31b7968E448877f69A96DE69f5de8cD23E); // Statas
     address balToken = address(0xba100000625a3754423978a60c9317c58a424e3D);
+    address payable public vaultV3 = payable(0xbA1333333333a1BA1108E8412f11850A5C319bA9);
 
     address balancerMinter = address(0x239e55F427D44C3cc793f49bFB507ebe76638a2b);
     address balancerPool = address(0x85B2b559bC2D21104C4DEFdd6EFcA8A20343361D);
@@ -63,7 +64,7 @@ contract ReliquaryBalancerGaugeV3 is ERC721Holder, Test {
 
         reliquary.grantRole(keccak256("OPERATOR"), address(this));
 
-        tRouter = new TRouter();
+        tRouter = new TRouter(vaultV3);
         IERC20(statasGho).forceApprove(address(tRouter), type(uint256).max);
         IERC20(statasUsdc).forceApprove(address(tRouter), type(uint256).max);
         IERC20(statasUsdt).forceApprove(address(tRouter), type(uint256).max);
