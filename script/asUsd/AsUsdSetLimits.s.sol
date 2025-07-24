@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "../DeploymentConstants.sol";
-import "contracts/tokens/CdxUSD.sol";
+import "contracts/tokens/AsUSD.sol";
 
-contract CdxUsdMint is Script, DeploymentConstants {
+contract AsUsdSetLimits is Script, DeploymentConstants {
     function setUp() public {}
 
     function run() public {
-        vm.broadcast();
-        CdxUSD(cdxUsd).mint(admin, 10_000e18);
+        uint32 eid_ = 40267;
+
+        vm.startBroadcast();
+        AsUSD(asUsd).setBalanceLimit(eid_, -10_000e18);
+        AsUSD(asUsd).setHourlyLimit(1000e18);
     }
 }

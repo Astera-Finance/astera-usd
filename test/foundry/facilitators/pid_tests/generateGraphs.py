@@ -19,7 +19,7 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
 
 # Upper subplot: currentVariableBorrowRate
 ax1.plot(asset_data["timestamp"], asset_data["currentVariableBorrowRate"] / 1e25, label="currentVariableBorrowRate")
-ax1.set_title("Rates over time for cdxUSD (0x1af7f588a501ea2b5bb3feefa744892aa2cf00e6)")
+ax1.set_title("Rates over time for asUSD (0x1af7f588a501ea2b5bb3feefa744892aa2cf00e6)")
 ax1.set_ylabel("Rates (in %)")
 if log : 
     ax1.set_yscale('log')  # Set y-axis to log scale
@@ -29,7 +29,7 @@ ax1.grid(True)
 # Lower subplot: stablePoolBalance
 ax2.plot(asset_data["timestamp"], asset_data["stablePoolBalance"] / 1e25, color='green', label="stablePoolBalance")
 ax2.set_xlabel("Timestamp")
-ax2.set_ylabel("Stable Pool balance cdxUSD (in %)")
+ax2.set_ylabel("Stable Pool balance asUSD (in %)")
 if log : 
     ax2.set_yscale('log')  # Set y-axis to log scale
 ax2.legend()

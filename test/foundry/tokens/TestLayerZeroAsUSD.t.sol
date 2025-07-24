@@ -28,9 +28,9 @@ import {OFTComposeMsgCodec} from
     "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/libs/OFTComposeMsgCodec.sol";
 
 // DevTools imports
-import {TestCdxUSD} from "test/helpers/TestCdxUSD.sol";
+import {TestAsUSD} from "test/helpers/TestAsUSD.sol";
 
-contract TestLayerZeroCdxUSD is TestCdxUSD {
+contract TestLayerZeroAsUSD is TestAsUSD {
     using OptionsBuilder for bytes;
 
     OFTMock aOFT;

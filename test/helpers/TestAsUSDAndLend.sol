@@ -93,17 +93,17 @@ import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/
 
 /// Main import
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
-import {ICdxUSD} from "contracts/interfaces/ICdxUSD.sol";
+import {AsUSD} from "contracts/tokens/AsUSD.sol";
+import {IAsUSD} from "contracts/interfaces/IAsUSD.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Events} from "test/helpers/Events.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Constants} from "test/helpers/Constants.sol";
 import {Sort} from "test/helpers/Sort.sol";
-import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
-import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+import {AsUsdAToken} from "contracts/facilitators/astera/token/AsUsdAToken.sol";
+import {AsUsdVariableDebtToken} from
+    "contracts/facilitators/astera/token/AsUsdVariableDebtToken.sol";
 
 import {RollingRewarder} from "contracts/staking_module/reliquary/rewarders/RollingRewarder.sol";
 
@@ -130,7 +130,7 @@ import {TRouter} from "./TRouter.sol";
 import {IVaultExplorer} from
     "lib/balancer-v3-monorepo/pkg/interfaces/contracts/vault/IVaultExplorer.sol";
 
-contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
+contract TestAsUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     using WadRayMath for uint256;
 
     uint32 aEid = 1;
@@ -142,7 +142,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     DeployedContracts deployedContracts;
     ConfigAddresses configAddresses;
 
-    uint256[] public rates = [0.039e27, 0.03e27, 0.03e27]; // = [wbtc, weth, dai, cdxUsd];
+    uint256[] public rates = [0.039e27, 0.03e27, 0.03e27]; // = [wbtc, weth, dai, asUsd];
     uint256[] public volStrat = [
         VOLATILE_OPTIMAL_UTILIZATION_RATE,
         VOLATILE_BASE_VARIABLE_BORROW_RATE,
@@ -178,7 +178,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     address public guardian = address(0x4);
     address public treasury = address(0x5);
 
-    CdxUSD public cdxUsd;
+    AsUSD public asUsd;
     ERC20 public counterAsset;
 
     address[] public aggregators;
@@ -204,7 +204,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
     TRouter public tRouter;
 
     uint128 public constant DEFAULT_CAPACITY = 100_000_000e18;
-    uint128 public constant INITIAL_CDXUSD_AMT = 10_000_000e18;
+    uint128 public constant INITIAL_ASUSD_AMT = 10_000_000e18;
     uint128 public constant INITIAL_COUNTER_ASSET_AMT = 10_000_000e18;
     uint128 public constant INITIAL_AMT = 100_000 ether;
 
@@ -339,18 +339,18 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
         tRouter = new TRouter(vaultV3);
 
-        /// ======= cdxUSD deploy =======
+        /// ======= asUSD deploy =======
         {
             setUpEndpoints(2, LibraryType.UltraLightNode);
-            cdxUsd = CdxUSD(
+            asUsd = AsUSD(
                 _deployOApp(
-                    type(CdxUSD).creationCode,
+                    type(AsUSD).creationCode,
                     abi.encode("aOFT", "aOFT", address(endpoints[aEid]), owner, treasury, guardian)
                 )
             );
-            cdxUsd.addFacilitator(userA, "user a", DEFAULT_CAPACITY * 1000);
-            cdxUsd.addFacilitator(userB, "user b", DEFAULT_CAPACITY * 1000);
-            cdxUsd.addFacilitator(userC, "user c", DEFAULT_CAPACITY * 1000);
+            asUsd.addFacilitator(userA, "user a", DEFAULT_CAPACITY * 1000);
+            asUsd.addFacilitator(userB, "user b", DEFAULT_CAPACITY * 1000);
+            asUsd.addFacilitator(userC, "user c", DEFAULT_CAPACITY * 1000);
         }
 
         /// ======= Counter Asset deployments =======
@@ -399,9 +399,9 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         /// ======= Faucet and Approve =======
         {
             vm.startPrank(userA);
-            cdxUsd.mint(userA, INITIAL_CDXUSD_AMT);
-            cdxUsd.mint(userB, INITIAL_CDXUSD_AMT);
-            cdxUsd.mint(address(this), INITIAL_CDXUSD_AMT);
+            asUsd.mint(userA, INITIAL_ASUSD_AMT);
+            asUsd.mint(userB, INITIAL_ASUSD_AMT);
+            asUsd.mint(address(this), INITIAL_ASUSD_AMT);
             vm.stopPrank();
 
             ERC20Mock(address(counterAsset)).mint(userB, INITIAL_COUNTER_ASSET_AMT);
@@ -409,17 +409,17 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             // MAX approve "vault" by all users
             for (uint160 i = 1; i <= 3; i++) {
                 vm.startPrank(address(i)); // address(0x1) == address(1)
-                cdxUsd.approve(address(vaultV3), type(uint256).max);
+                asUsd.approve(address(vaultV3), type(uint256).max);
                 counterAsset.approve(address(vaultV3), type(uint256).max);
-                cdxUsd.approve(address(tRouter), type(uint256).max);
+                asUsd.approve(address(tRouter), type(uint256).max);
                 counterAsset.approve(address(tRouter), type(uint256).max);
                 vm.stopPrank();
             }
 
             vm.startPrank(owner); // address(0x1) == address(1)
-            cdxUsd.approve(address(vaultV3), type(uint256).max);
+            asUsd.approve(address(vaultV3), type(uint256).max);
             counterAsset.approve(address(vaultV3), type(uint256).max);
-            cdxUsd.approve(address(tRouter), type(uint256).max);
+            asUsd.approve(address(tRouter), type(uint256).max);
             counterAsset.approve(address(tRouter), type(uint256).max);
             vm.stopPrank();
         }
@@ -427,14 +427,14 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
 
     // ======= Astera USD =======
 
-    function fixture_configureCdxUsd(
+    function fixture_configureAsUsd(
         address _lendingPool,
         address _aToken,
         address _variableDebtToken,
-        address _cdxUsdOracle,
-        address _cdxUsd,
+        address _asUsdOracle,
+        address _asUsd,
         address _interestStrategy,
-        address _reliquaryCdxusdRewarder,
+        address _reliquaryAsusdRewarder,
         ConfigAddresses memory configAddresses,
         LendingPoolConfigurator lendingPoolConfiguratorProxy,
         LendingPoolAddressesProvider lendingPoolAddressesProvider
@@ -443,47 +443,47 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         address[] memory aggregator = new address[](1);
         uint256[] memory timeout = new uint256[](1);
 
-        asset[0] = _cdxUsd;
-        aggregator[0] = _cdxUsdOracle;
+        asset[0] = _asUsd;
+        aggregator[0] = _asUsdOracle;
         timeout[0] = 1000 days;
 
         commonContracts.oracle.setAssetSources(asset, aggregator, timeout);
 
-        fixture_configureReservesCdxUsd(
+        fixture_configureReservesAsUsd(
             configAddresses,
             lendingPoolConfiguratorProxy,
             lendingPoolAddressesProvider,
             _aToken,
             _variableDebtToken,
-            _cdxUsd,
+            _asUsd,
             _interestStrategy
         );
 
         DataTypes.ReserveData memory reserveDataTemp =
-            deployedContracts.lendingPool.getReserveData(_cdxUsd, false);
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setVariableDebtToken(
+            deployedContracts.lendingPool.getReserveData(_asUsd, false);
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setVariableDebtToken(
             reserveDataTemp.variableDebtTokenAddress
         );
-        deployedContracts.lendingPoolConfigurator.setTreasury(address(cdxUsd), false, treasury);
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setReliquaryInfo(
-            _reliquaryCdxusdRewarder, 8000 /* 80% */
+        deployedContracts.lendingPoolConfigurator.setTreasury(address(asUsd), false, treasury);
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setReliquaryInfo(
+            _reliquaryAsusdRewarder, 8000 /* 80% */
         );
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setKeeper(address(this));
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setKeeper(address(this));
         DataTypes.ReserveData memory reserve =
-            ILendingPool(_lendingPool).getReserveData(_cdxUsd, false);
+            ILendingPool(_lendingPool).getReserveData(_asUsd, false);
 
-        CdxUsdVariableDebtToken(reserveDataTemp.variableDebtTokenAddress).setAToken(
+        AsUsdVariableDebtToken(reserveDataTemp.variableDebtTokenAddress).setAToken(
             reserveDataTemp.aTokenAddress
         );
     }
 
-    function fixture_configureReservesCdxUsd(
+    function fixture_configureReservesAsUsd(
         ConfigAddresses memory configAddresses,
         LendingPoolConfigurator lendingPoolConfigurator,
         LendingPoolAddressesProvider lendingPoolAddressesProvider,
         address _aTokenAddress,
         address _variableDebtToken,
-        address _cdxUsd,
+        address _asUsd,
         address _interestStrategy
     ) public {
         ILendingPoolConfigurator.InitReserveInput[] memory initInputParams =
@@ -491,14 +491,14 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         ATokensAndRatesHelper.ConfigureReserveInput[] memory inputConfigParams =
             new ATokensAndRatesHelper.ConfigureReserveInput[](1);
 
-        string memory tmpSymbol = ERC20(_cdxUsd).symbol();
+        string memory tmpSymbol = ERC20(_asUsd).symbol();
 
         initInputParams[0] = ILendingPoolConfigurator.InitReserveInput({
             aTokenImpl: _aTokenAddress,
             variableDebtTokenImpl: address(_variableDebtToken),
-            underlyingAssetDecimals: ERC20(_cdxUsd).decimals(),
+            underlyingAssetDecimals: ERC20(_asUsd).decimals(),
             interestRateStrategyAddress: _interestStrategy,
-            underlyingAsset: _cdxUsd,
+            underlyingAsset: _asUsd,
             reserveType: false,
             treasury: configAddresses.treasury,
             incentivesController: configAddresses.rewarder,
@@ -515,7 +515,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         // revert("eeee");
 
         inputConfigParams[0] = ATokensAndRatesHelper.ConfigureReserveInput({
-            asset: _cdxUsd,
+            asset: _asUsd,
             reserveType: false,
             baseLTV: 8000,
             liquidationThreshold: 8500,
@@ -790,7 +790,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         _aTokens = new AToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
             (address _aTokenAddress,) = asteraDataProvider.getLpTokens(
-                _tokens[idx], (_tokens[idx] == address(cdxUsd) ? false : true)
+                _tokens[idx], (_tokens[idx] == address(asUsd) ? false : true)
             );
             // console2.log("AToken%s: %s", idx, _aTokenAddress);
             _aTokens[idx] = AToken(_aTokenAddress);
@@ -804,7 +804,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         _aTokensW = new AToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
             (address _aTokenAddress,) = asteraDataProvider.getLpTokens(
-                _tokens[idx], (_tokens[idx] == address(cdxUsd) ? false : true)
+                _tokens[idx], (_tokens[idx] == address(asUsd) ? false : true)
             );
             // console2.log("AToken%s: %s", idx, _aTokenAddress);
             _aTokensW[idx] = AToken(address(AToken(_aTokenAddress).WRAPPER_ADDRESS()));
@@ -818,7 +818,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
         _varDebtTokens = new VariableDebtToken[](_tokens.length);
         for (uint32 idx = 0; idx < _tokens.length; idx++) {
             (, address _variableDebtToken) = asteraDataProvider.getLpTokens(
-                _tokens[idx], _tokens[idx] == address(cdxUsd) ? false : true
+                _tokens[idx], _tokens[idx] == address(asUsd) ? false : true
             );
             // console2.log("Atoken address", _variableDebtToken);
             string memory debtToken = string.concat("debtToken", uintToString(idx));
@@ -989,7 +989,7 @@ contract TestCdxUSDAndLend is TestHelperOz5, Sort, Events, Constants {
             uint256 liquidityIndex,
             uint256 variableBorrowIndex,
             uint40 lastUpdateTimestamp
-        ) = protocolDataProvider.getReserveData(token, token == address(cdxUsd) ? false : true);
+        ) = protocolDataProvider.getReserveData(token, token == address(asUsd) ? false : true);
         return ReserveDataParams(
             availableLiquidity,
             totalVariableDebt,

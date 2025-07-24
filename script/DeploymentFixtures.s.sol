@@ -24,9 +24,9 @@ import {ILendingPoolAddressesProvider} from
     "lib/astera/contracts/interfaces/ILendingPoolAddressesProvider.sol";
 import {ILendingPoolConfigurator} from
     "lib/astera/contracts/interfaces/ILendingPoolConfigurator.sol";
-import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
-import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+import {AsUsdAToken} from "contracts/facilitators/astera/token/AsUsdAToken.sol";
+import {AsUsdVariableDebtToken} from
+    "contracts/facilitators/astera/token/AsUsdVariableDebtToken.sol";
 import {DataTypes} from "lib/astera/contracts/protocol/libraries/types/DataTypes.sol";
 import {DeploymentConstants} from "./DeploymentConstants.sol";
 
@@ -91,12 +91,12 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         return (address(stablePool));
     }
 
-    function fixture_configureCdxUsd(
+    function fixture_configureAsUsd(
         ExtContractsForConfiguration memory _extContractsForConfiguration,
         PoolReserversConfig memory _poolReserversConfig,
-        address _cdxUsd,
-        address _reliquaryCdxUsdRewarder,
-        address _cdxUsdAggregator,
+        address _asUsd,
+        address _reliquaryAsUsdRewarder,
+        address _asUsdAggregator,
         uint256 _reliquaryAllocation,
         uint256 _oracleTimeout,
         address _deployer,
@@ -107,59 +107,59 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             address[] memory aggregator = new address[](1);
             uint256[] memory timeout = new uint256[](1);
 
-            asset[0] = _cdxUsd;
-            aggregator[0] = _cdxUsdAggregator;
+            asset[0] = _asUsd;
+            aggregator[0] = _asUsdAggregator;
             timeout[0] = _oracleTimeout;
 
             // vm.prank(deployer);
             Oracle(_extContractsForConfiguration.oracle).setAssetSources(asset, aggregator, timeout);
         }
 
-        fixture_configureReservesCdxUsd(
-            _extContractsForConfiguration, _poolReserversConfig, _cdxUsd, _deployer
+        fixture_configureReservesAsUsd(
+            _extContractsForConfiguration, _poolReserversConfig, _asUsd, _deployer
         );
         address lendingPool = ILendingPoolAddressesProvider(
             _extContractsForConfiguration.lendingPoolAddressesProvider
         ).getLendingPool();
         DataTypes.ReserveData memory reserveDataTemp =
-            ILendingPool(lendingPool).getReserveData(_cdxUsd, _poolReserversConfig.reserveType);
+            ILendingPool(lendingPool).getReserveData(_asUsd, _poolReserversConfig.reserveType);
         // vm.startPrank(deployer);
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setVariableDebtToken(
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setVariableDebtToken(
             reserveDataTemp.variableDebtTokenAddress
         );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator).setTreasury(
-            address(_cdxUsd), _poolReserversConfig.reserveType, constantsTreasury
+            address(_asUsd), _poolReserversConfig.reserveType, constantsTreasury
         );
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setReliquaryInfo(
-            _reliquaryCdxUsdRewarder, _reliquaryAllocation
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setReliquaryInfo(
+            _reliquaryAsUsdRewarder, _reliquaryAllocation
         );
-        CdxUsdAToken(reserveDataTemp.aTokenAddress).setKeeper(_keeper);
+        AsUsdAToken(reserveDataTemp.aTokenAddress).setKeeper(_keeper);
         DataTypes.ReserveData memory reserve =
-            ILendingPool(lendingPool).getReserveData(_cdxUsd, _poolReserversConfig.reserveType);
+            ILendingPool(lendingPool).getReserveData(_asUsd, _poolReserversConfig.reserveType);
 
-        CdxUsdVariableDebtToken(reserveDataTemp.variableDebtTokenAddress).setAToken(
+        AsUsdVariableDebtToken(reserveDataTemp.variableDebtTokenAddress).setAToken(
             reserveDataTemp.aTokenAddress
         );
         // vm.stopPrank();
     }
 
-    function fixture_configureReservesCdxUsd(
+    function fixture_configureReservesAsUsd(
         ExtContractsForConfiguration memory _extContractsForConfiguration,
         PoolReserversConfig memory poolReserversConfig,
-        address _cdxUsd,
+        address _asUsd,
         address _owner
     ) public {
         ILendingPoolConfigurator.InitReserveInput[] memory initInputParams =
             new ILendingPoolConfigurator.InitReserveInput[](1);
 
-        string memory tmpSymbol = ERC20(_cdxUsd).symbol();
+        string memory tmpSymbol = ERC20(_asUsd).symbol();
 
         initInputParams[0] = ILendingPoolConfigurator.InitReserveInput({
             aTokenImpl: _extContractsForConfiguration.aTokenImpl,
             variableDebtTokenImpl: _extContractsForConfiguration.variableDebtTokenImpl,
-            underlyingAssetDecimals: ERC20(_cdxUsd).decimals(),
+            underlyingAssetDecimals: ERC20(_asUsd).decimals(),
             interestRateStrategyAddress: _extContractsForConfiguration.interestStrat,
-            underlyingAsset: _cdxUsd,
+            underlyingAsset: _asUsd,
             reserveType: poolReserversConfig.reserveType,
             treasury: _extContractsForConfiguration.treasury,
             incentivesController: _extContractsForConfiguration.rewarder,
@@ -175,25 +175,25 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         ILendingPoolConfigurator(address(_extContractsForConfiguration.lendingPoolConfigurator))
             .batchInitReserve(initInputParams);
 
-        // uint256 tokenPrice = _extContractsForConfiguration.oracle.getAssetPrice(_cdxUsd);
+        // uint256 tokenPrice = _extContractsForConfiguration.oracle.getAssetPrice(_asUsd);
         // uint256 tokenAmount = usdBootstrapAmount * contracts.oracle.BASE_CURRENCY_UNIT()
-        //     * 10 ** IERC20Detailed(_cdxUsd).decimals() / tokenPrice;
+        //     * 10 ** IERC20Detailed(_asUsd).decimals() / tokenPrice;
 
         // console2.log(
         //     "Bootstrap amount: %s %s for price: %s",
         //     tokenAmount,
-        //     IERC20Detailed(_cdxUsd).symbol(),
+        //     IERC20Detailed(_asUsd).symbol(),
         //     tokenPrice
         // );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
-            .enableBorrowingOnReserve(_cdxUsd, poolReserversConfig.reserveType);
+            .enableBorrowingOnReserve(_asUsd, poolReserversConfig.reserveType);
         // _contracts.lendingPool.borrow(
-        //     _cdxUsd,
+        //     _asUsd,
         //     reserveConfig.reserveType,
         //     tokenAmount / 2,
         //     _contracts.lendingPoolAddressesProvider.getPoolAdmin()
         // );
-        // reserveData = _contracts.lendingPool.getReserveData(_cdxUsd, reserveConfig.reserveType);
+        // reserveData = _contracts.lendingPool.getReserveData(_asUsd, reserveConfig.reserveType);
         // require(
         //     IERC20Detailed(reserveData.variableDebtTokenAddress).totalSupply() == tokenAmount / 2,
         //     "TotalSupply of debt not equal to borrowed amount!"
@@ -201,7 +201,7 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
 
         if (!poolReserversConfig.borrowingEnabled) {
             ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
-                .disableBorrowingOnReserve(_cdxUsd, poolReserversConfig.reserveType);
+                .disableBorrowingOnReserve(_asUsd, poolReserversConfig.reserveType);
         }
         ILendingPool lp = ILendingPool(
             ILendingPoolAddressesProvider(
@@ -209,17 +209,17 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             ).getLendingPool()
         );
         DataTypes.ReserveData memory reserveDataTemp =
-            lp.getReserveData(_cdxUsd, poolReserversConfig.reserveType);
+            lp.getReserveData(_asUsd, poolReserversConfig.reserveType);
         console2.log(
             "reserveDataTemp.variableDebtTokenAddress: ", reserveDataTemp.variableDebtTokenAddress
         );
 
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
             .setAsteraReserveFactor(
-            _cdxUsd, poolReserversConfig.reserveType, poolReserversConfig.reserveFactor
+            _asUsd, poolReserversConfig.reserveType, poolReserversConfig.reserveFactor
         );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
-            .enableFlashloan(_cdxUsd, poolReserversConfig.reserveType);
+            .enableFlashloan(_asUsd, poolReserversConfig.reserveType);
         // vm.stopPrank();
     }
 }

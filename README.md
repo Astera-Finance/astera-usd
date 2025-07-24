@@ -1,6 +1,6 @@
 # Astera USD
 
-<p align="center">Astera-USD (cdxUSD) is the native Astera overcollateralized stablecoin integrated into <a href="https://github.com/Astera-Finance/astera" style="color: #a77dff">Astera</a> market, multichain using <a href="https://layerzero.network/" style="color: #a77dff">LayerZero</a> and with a new innovative interest rate <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212" style="color: #a77dff">PID controle system</a>.
+<p align="center">Astera-USD (asUSD) is the native Astera overcollateralized stablecoin integrated into <a href="https://github.com/Astera-Finance/astera" style="color: #a77dff">Astera</a> market, multichain using <a href="https://layerzero.network/" style="color: #a77dff">LayerZero</a> and with a new innovative interest rate <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212" style="color: #a77dff">PID controle system</a>.
 </p>
 
 ## Quickstart

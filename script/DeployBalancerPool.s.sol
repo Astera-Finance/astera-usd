@@ -22,32 +22,32 @@ contract DeployBalancerPool is Script, DeploymentFixtures {
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         TRouter tRouter = new TRouter(balancerContracts.balVault); // Do we want to deploy this helper or actions shall be done off chain ?
-        uint256 initialCdxAmt = 10e18;
+        uint256 initialAsAmt = 10e18;
         uint256 initialCounterAssetAmt = 10e6;
         IERC20[] memory assets = new IERC20[](2);
-        assets[0] = IERC20(cdxUsd);
+        assets[0] = IERC20(asUsd);
         assets[1] = IERC20(usdcAddress);
         assets = sort(assets);
         address stablePool =
             createStablePool(assets, AMPLIFICATION_PARAM, balancerContracts.stablePoolFactory);
         IERC20[] memory setupPoolTokens =
             IVaultExplorer(balancerContracts.balVault).getPoolTokens(stablePool);
-        uint256 indexCdxUsdTemp;
+        uint256 indexAsUsdTemp;
         uint256 indexCounterAssetTemp;
 
         for (uint256 i = 0; i < setupPoolTokens.length; i++) {
             console2.log("setupPoolTokens[i]: ", address(setupPoolTokens[i]));
-            if (setupPoolTokens[i] == IERC20(cdxUsd)) indexCdxUsdTemp = i;
+            if (setupPoolTokens[i] == IERC20(asUsd)) indexAsUsdTemp = i;
             if (setupPoolTokens[i] == IERC20(usdcAddress)) indexCounterAssetTemp = i;
         }
 
         uint256[] memory amountsToAdd = new uint256[](setupPoolTokens.length);
-        amountsToAdd[indexCdxUsdTemp] = initialCdxAmt;
+        amountsToAdd[indexAsUsdTemp] = initialAsAmt;
         amountsToAdd[indexCounterAssetTemp] = initialCounterAssetAmt;
 
-        IERC20(cdxUsd).approve(address(tRouter), type(uint256).max);
+        IERC20(asUsd).approve(address(tRouter), type(uint256).max);
         IERC20(usdcAddress).approve(address(tRouter), type(uint256).max);
-        console2.log("Sender's balance of cdxUSD: ", IERC20(cdxUsd).balanceOf(deployer));
+        console2.log("Sender's balance of asUSD: ", IERC20(asUsd).balanceOf(deployer));
         console2.log("Sender's balance of USDC: ", IERC20(usdcAddress).balanceOf(deployer));
         tRouter.initialize(stablePool, assets, amountsToAdd);
 

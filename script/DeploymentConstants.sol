@@ -28,7 +28,7 @@ struct BalancerContracts {
     address payable balVault;
 }
 
-// cdxUSD salt   = 0x3d0c000adf317206fa4a3201a8f8c926ef394fad0047c74b092069a800a5ed54
+// asUSD salt   = 0x3d0c000adf317206fa4a3201a8f8c926ef394fad0047c74b092069a800a5ed54
 // Deployer salt = 0x3d0c000adf317206fa4a3201a8f8c926ef394fad00a98c721b778d1401b27a21
 
 contract DeploymentConstants {
@@ -41,7 +41,7 @@ contract DeploymentConstants {
     /// all chains
 
     address public constant createx = 0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed; // all chains
-    address public constant cdxUsd = 0xC0D3700000987C99b3C9009069E4f8413fD22330; //0x21E200A8576daCC89e5cd96cdffaE9C105Bd0407 -> veified; //deployed with me as a owner // 0xC0D3700000987C99b3C9009069E4f8413fD22330; // add constant
+    address public constant asUsd = 0xC0D3700000987C99b3C9009069E4f8413fD22330; //0x21E200A8576daCC89e5cd96cdffaE9C105Bd0407 -> veified; //deployed with me as a owner // 0xC0D3700000987C99b3C9009069E4f8413fD22330; // add constant
     // address public constant deployer = 0xF29dA3595351dBFd0D647857C46F8D63Fc2e68C5;
     address public constant timelock = 0xc0D3700924301AC384E5Eae3272E08220752DE3D;
     address public constant multisignAdmin = 0xfEfcb2fb19b9A70B30646Fdc1A0860Eb12F7ff8b; // 3/X

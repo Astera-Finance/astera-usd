@@ -3,16 +3,16 @@ pragma solidity ^0.8.0;
 
 import {IOFTExtended} from "./IOFTExtended.sol";
 
-interface ICdxUSD is IOFTExtended {
+interface IAsUSD is IOFTExtended {
     // ======================= Errors ================================
 
-    error CdxUSD__INVALID_MINT_AMOUNT();
-    error CdxUSD__INVALID_BURN_AMOUNT();
-    error CdxUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED();
-    error CdxUSD__FACILITATOR_ALREADY_EXISTS();
-    error CdxUSD__INVALID_LABEL();
-    error CdxUSD__FACILITATOR_DOES_NOT_EXIST();
-    error CdxUSD__FACILITATOR_BUCKET_LEVEL_NOT_ZERO();
+    error AsUSD__INVALID_MINT_AMOUNT();
+    error AsUSD__INVALID_BURN_AMOUNT();
+    error AsUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED();
+    error AsUSD__FACILITATOR_ALREADY_EXISTS();
+    error AsUSD__INVALID_LABEL();
+    error AsUSD__FACILITATOR_DOES_NOT_EXIST();
+    error AsUSD__FACILITATOR_BUCKET_LEVEL_NOT_ZERO();
 
     // ================================== Events ===================================
 

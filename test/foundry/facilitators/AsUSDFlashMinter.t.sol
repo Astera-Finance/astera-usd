@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
 
-import {TestCdxUSD} from "test/helpers/TestCdxUSD.sol";
-import "contracts/facilitators/flash_minter/CdxUSDFlashMinter.sol";
+import {TestAsUSD} from "test/helpers/TestAsUSD.sol";
+import "contracts/facilitators/flash_minter/AsUSDFlashMinter.sol";
 import {MockFlashBorrower} from "../../helpers/mocks/MockFlashBorrower.sol";
-import "contracts/interfaces/ICdxUSDFacilitators.sol";
+import "contracts/interfaces/IAsUSDFacilitators.sol";
 
-contract TestCdxUSDFlashMinter is TestCdxUSD {
+contract TestAsUSDFlashMinter is TestAsUSD {
     uint256 public constant DEFAULT_FLASH_FEE = 200;
     uint256 public constant DEFAULT_BORROW_AMOUNT = 1000e18;
     uint256 public constant DEFAULT_BUCKET_CAPACITY = 1_000_000e18;
 
-    CdxUSDFlashMinter public flashMinter;
+    AsUSDFlashMinter public flashMinter;
     MockFlashBorrower public flashBorrower;
 
     function setUp() public virtual override {
         super.setUp();
         flashMinter =
-            new CdxUSDFlashMinter(address(cdxUSD), treasury, DEFAULT_FLASH_FEE, address(this));
+            new AsUSDFlashMinter(address(asUSD), treasury, DEFAULT_FLASH_FEE, address(this));
         flashBorrower = new MockFlashBorrower(IERC3156FlashLender(flashMinter));
-        cdxUSD.addFacilitator(address(flashMinter), "Bonjour", uint128(DEFAULT_BUCKET_CAPACITY));
+        asUSD.addFacilitator(address(flashMinter), "Bonjour", uint128(DEFAULT_BUCKET_CAPACITY));
         flashMinter.updateFee(DEFAULT_FLASH_FEE);
     }
 
     function testConstructor() public {
         vm.expectEmit(true, true, false, false);
-        emit CdxUSDFlashMinter.TreasurySet(treasury);
+        emit AsUSDFlashMinter.TreasurySet(treasury);
         vm.expectEmit(false, false, false, true);
         emit FeeUpdated(0, DEFAULT_FLASH_FEE);
-        CdxUSDFlashMinter flashMinterTemp =
-            new CdxUSDFlashMinter(address(cdxUSD), treasury, DEFAULT_FLASH_FEE, address(this));
-        assertEq(address(flashMinterTemp.cdxUSD()), address(cdxUSD), "Wrong GHO token address");
+        AsUSDFlashMinter flashMinterTemp =
+            new AsUSDFlashMinter(address(asUSD), treasury, DEFAULT_FLASH_FEE, address(this));
+        assertEq(address(flashMinterTemp.asUSD()), address(asUSD), "Wrong GHO token address");
         assertEq(flashMinterTemp.getFee(), DEFAULT_FLASH_FEE, "Wrong fee");
         assertEq(flashMinterTemp.getTreasury(), treasury, "Wrong treasury address");
         assertEq(
@@ -39,29 +39,29 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
     }
 
     function testRevertConstructorFeeOutOfRange() public {
-        vm.expectRevert(CdxUSDFlashMinter.CdxUSDFlashMinter__FEE_OUT_OF_RANGE.selector);
-        new CdxUSDFlashMinter(address(cdxUSD), treasury, 10001, address(this));
+        vm.expectRevert(AsUSDFlashMinter.AsUSDFlashMinter__FEE_OUT_OF_RANGE.selector);
+        new AsUSDFlashMinter(address(asUSD), treasury, 10001, address(this));
     }
 
     function testRevertFlashloanNonRecipient() public {
         vm.expectRevert();
         flashMinter.flashLoan(
-            IERC3156FlashBorrower(address(this)), address(cdxUSD), DEFAULT_BORROW_AMOUNT, ""
+            IERC3156FlashBorrower(address(this)), address(asUSD), DEFAULT_BORROW_AMOUNT, ""
         );
     }
 
     function testRevertFlashloanWrongToken() public {
-        vm.expectRevert(CdxUSDFlashMinter.CdxUSDFlashMinter__UNSUPPORTED_ASSET.selector);
+        vm.expectRevert(AsUSDFlashMinter.AsUSDFlashMinter__UNSUPPORTED_ASSET.selector);
         flashMinter.flashLoan(
             IERC3156FlashBorrower(address(flashBorrower)), address(0), DEFAULT_BORROW_AMOUNT, ""
         );
     }
 
     function testRevertFlashloanMoreThanCapacity() public {
-        vm.expectRevert(ICdxUSD.CdxUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED.selector);
+        vm.expectRevert(IAsUSD.AsUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED.selector);
         flashMinter.flashLoan(
             IERC3156FlashBorrower(address(flashBorrower)),
-            address(cdxUSD),
+            address(asUSD),
             DEFAULT_BUCKET_CAPACITY + 1,
             ""
         );
@@ -69,13 +69,13 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
 
     function testRevertFlashloanInsufficientReturned() public {
         vm.expectRevert();
-        flashBorrower.flashBorrow(address(cdxUSD), DEFAULT_BORROW_AMOUNT);
+        flashBorrower.flashBorrow(address(asUSD), DEFAULT_BORROW_AMOUNT);
     }
 
     function testRevertFlashloanWrongCallback() public {
         flashBorrower.setAllowCallback(false);
-        vm.expectRevert(CdxUSDFlashMinter.CdxUSDFlashMinter__CALLBACK_FAILED.selector);
-        flashBorrower.flashBorrow(address(cdxUSD), DEFAULT_BORROW_AMOUNT);
+        vm.expectRevert(AsUSDFlashMinter.AsUSDFlashMinter__CALLBACK_FAILED.selector);
+        flashBorrower.flashBorrow(address(asUSD), DEFAULT_BORROW_AMOUNT);
     }
 
     function testRevertUpdateFeeNotPoolAdmin() public {
@@ -87,7 +87,7 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
     }
 
     function testRevertUpdateFeeOutOfRange() public {
-        vm.expectRevert(CdxUSDFlashMinter.CdxUSDFlashMinter__FEE_OUT_OF_RANGE.selector);
+        vm.expectRevert(AsUSDFlashMinter.AsUSDFlashMinter__FEE_OUT_OF_RANGE.selector);
 
         flashMinter.updateFee(10001);
     }
@@ -101,7 +101,7 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
     }
 
     function testRevertFlashfeeNotGho() public {
-        vm.expectRevert(CdxUSDFlashMinter.CdxUSDFlashMinter__UNSUPPORTED_ASSET.selector);
+        vm.expectRevert(AsUSDFlashMinter.AsUSDFlashMinter__UNSUPPORTED_ASSET.selector);
         flashMinter.flashFee(address(0), DEFAULT_BORROW_AMOUNT);
     }
 
@@ -109,38 +109,38 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
 
     function testFlashloan() public {
         uint256 feeAmount = (DEFAULT_FLASH_FEE * DEFAULT_BORROW_AMOUNT) / 100e2;
-        _cdxUsdFaucet(address(flashBorrower), feeAmount);
+        _asUsdFaucet(address(flashBorrower), feeAmount);
 
         vm.expectEmit(true, true, true, true, address(flashMinter));
         emit FlashMint(
             address(flashBorrower),
             address(flashBorrower),
-            address(cdxUSD),
+            address(asUSD),
             DEFAULT_BORROW_AMOUNT,
             feeAmount
         );
-        flashBorrower.flashBorrow(address(cdxUSD), DEFAULT_BORROW_AMOUNT);
+        flashBorrower.flashBorrow(address(asUSD), DEFAULT_BORROW_AMOUNT);
     }
 
     function testDistributeFeesToTreasury() public {
-        uint256 treasuryBalanceBefore = cdxUSD.balanceOf(treasury);
+        uint256 treasuryBalanceBefore = asUSD.balanceOf(treasury);
 
-        _cdxUsdFaucet(address(flashMinter), 100e18);
+        _asUsdFaucet(address(flashMinter), 100e18);
         assertEq(
-            cdxUSD.balanceOf(address(flashMinter)), 100e18, "GhoFlashMinter should have 100 GHO"
+            asUSD.balanceOf(address(flashMinter)), 100e18, "GhoFlashMinter should have 100 GHO"
         );
 
         vm.expectEmit(true, true, false, true, address(flashMinter));
-        emit ICdxUSDFacilitators.FeesDistributedToTreasury(treasury, address(cdxUSD), 100e18);
+        emit IAsUSDFacilitators.FeesDistributedToTreasury(treasury, address(asUSD), 100e18);
         flashMinter.distributeFeesToTreasury();
 
         assertEq(
-            cdxUSD.balanceOf(address(flashMinter)),
+            asUSD.balanceOf(address(flashMinter)),
             0,
             "GhoFlashMinter should have no GHO left after fee distribution"
         );
         assertEq(
-            cdxUSD.balanceOf(treasury),
+            asUSD.balanceOf(treasury),
             treasuryBalanceBefore + 100e18,
             "Treasury should have 100 more GHO"
         );
@@ -158,7 +158,7 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
         assertEq(flashMinter.getTreasury(), treasury, "Flashminter non-default TREASURY");
         assertTrue(treasury != address(this));
         vm.expectEmit(true, true, false, false, address(flashMinter));
-        emit CdxUSDFlashMinter.TreasurySet(address(this));
+        emit AsUSDFlashMinter.TreasurySet(address(this));
         flashMinter.setTreasury(address(this));
     }
 
@@ -170,14 +170,14 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
 
     function testMaxFlashloanGho() public {
         assertEq(
-            flashMinter.maxFlashLoan(address(cdxUSD)),
+            flashMinter.maxFlashLoan(address(asUSD)),
             DEFAULT_BUCKET_CAPACITY,
             "Max flash loan should be DEFAULT_BUCKET_CAPACITY for GHO token"
         );
     }
 
     function testNotWhitelistedFlashFee() public {
-        uint256 fee = flashMinter.flashFee(address(cdxUSD), DEFAULT_BORROW_AMOUNT);
+        uint256 fee = flashMinter.flashFee(address(asUSD), DEFAULT_BORROW_AMOUNT);
         uint256 expectedFee = (DEFAULT_FLASH_FEE * DEFAULT_BORROW_AMOUNT) / 100e2;
         assertEq(fee, expectedFee, "Flash fee should be correct");
     }
@@ -189,7 +189,7 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
         vm.assume(amount <= DEFAULT_BUCKET_CAPACITY);
         flashMinter.updateFee(feeToSet);
 
-        uint256 fee = flashMinter.flashFee(address(cdxUSD), amount);
+        uint256 fee = flashMinter.flashFee(address(asUSD), amount);
         uint256 expectedFee = (feeToSet * amount) / 100e2;
 
         // We account for +/- 1 wei of rounding error.
@@ -204,8 +204,8 @@ contract TestCdxUSDFlashMinter is TestCdxUSD {
 
     /// ============ helpers ============
 
-    function _cdxUsdFaucet(address to, uint256 amt) internal {
+    function _asUsdFaucet(address to, uint256 amt) internal {
         vm.prank(userA);
-        cdxUSD.mint(to, amt);
+        asUSD.mint(to, amt);
     }
 }

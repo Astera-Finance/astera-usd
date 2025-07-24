@@ -35,8 +35,8 @@ import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/
 
 /// Main import
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "contracts/tokens/CdxUSD.sol";
-import "contracts/interfaces/ICdxUSD.sol";
+import "contracts/tokens/AsUSD.sol";
+import "contracts/interfaces/IAsUSD.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "test/helpers/Events.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
@@ -67,12 +67,12 @@ import {TRouter} from "test/helpers/TRouter.sol";
 import {IVaultExplorer} from
     "lib/balancer-v3-monorepo/pkg/interfaces/contracts/vault/IVaultExplorer.sol";
 
-contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
+contract TestAsUSD is TestHelperOz5, Sort, Events, Constants {
     uint32 aEid = 1;
     uint32 bEid = 2;
 
     uint128 public constant DEFAULT_CAPACITY = 100_000_000e18;
-    uint128 public constant INITIAL_CDXUSD_AMT = 10_000_000e18;
+    uint128 public constant INITIAL_ASUSD_AMT = 10_000_000e18;
     uint128 public constant INITIAL_USDT_AMT = 10_000_000e6;
     uint128 public constant INITIAL_USDC_AMT = 10_000_000e6;
 
@@ -85,7 +85,7 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
     address public guardian = address(0x4);
     address public treasury = address(0x5);
 
-    CdxUSD public cdxUSD;
+    AsUSD public asUSD;
     IERC20 public usdc;
     IERC20 public usdt;
 
@@ -103,13 +103,13 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
         vm.deal(userC, INITIAL_ETH_MINT);
 
         setUpEndpoints(2, LibraryType.UltraLightNode);
-        cdxUSD = CdxUSD(
+        asUSD = AsUSD(
             _deployOApp(
-                type(CdxUSD).creationCode,
+                type(AsUSD).creationCode,
                 abi.encode("aOFT", "aOFT", address(endpoints[aEid]), owner, treasury, guardian)
             )
         );
-        cdxUSD.addFacilitator(userA, "user a", DEFAULT_CAPACITY);
+        asUSD.addFacilitator(userA, "user a", DEFAULT_CAPACITY);
 
         usdc = IERC20(address(new ERC20Mock{salt: "1"}(6)));
         usdt = IERC20(address(new ERC20Mock{salt: "2"}(6)));
@@ -125,9 +125,9 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
         ERC20Mock(address(usdt)).mint(userC, INITIAL_USDT_AMT);
 
         vm.startPrank(userA);
-        cdxUSD.mint(userA, INITIAL_CDXUSD_AMT);
-        cdxUSD.mint(userB, INITIAL_CDXUSD_AMT);
-        cdxUSD.mint(address(this), INITIAL_CDXUSD_AMT);
+        asUSD.mint(userA, INITIAL_ASUSD_AMT);
+        asUSD.mint(userB, INITIAL_ASUSD_AMT);
+        asUSD.mint(address(this), INITIAL_ASUSD_AMT);
         vm.stopPrank();
 
         ERC20Mock(address(usdc)).mint(userB, INITIAL_USDC_AMT);
@@ -136,7 +136,7 @@ contract TestCdxUSD is TestHelperOz5, Sort, Events, Constants {
         // MAX approve "vault" by all users
         for (uint160 i = 1; i <= 3; i++) {
             vm.startPrank(address(i)); // address(0x1) == address(1)
-            cdxUSD.approve(vaultV3, type(uint256).max);
+            asUSD.approve(vaultV3, type(uint256).max);
             usdc.approve(vaultV3, type(uint256).max);
             usdt.approve(vaultV3, type(uint256).max);
             vm.stopPrank();

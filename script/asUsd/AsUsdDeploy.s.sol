@@ -5,11 +5,11 @@ import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "lib/createx/src/CreateX.sol";
 import "../DeploymentConstants.sol";
-import "contracts/tokens/CdxUSD.sol";
+import "contracts/tokens/AsUSD.sol";
 
-contract CdxUsdDeploy is Script, DeploymentConstants {
+contract AsUsdDeploy is Script, DeploymentConstants {
     string public name = "Astera USD";
-    string public symbol = "cdxUSD";
+    string public symbol = "asUSD";
     address public delegate = timelock; // testnet address
     address public treasury = multisignAdmin; // testnet address
     address public guardian = multisignGuardian; // testnet address
@@ -20,7 +20,7 @@ contract CdxUsdDeploy is Script, DeploymentConstants {
 
     function run() public {
         bytes memory args = abi.encode(name, symbol, endpoint, delegate, treasury, guardian);
-        bytes memory cachedInitCode = abi.encodePacked(type(CdxUSD).creationCode, args);
+        bytes memory cachedInitCode = abi.encodePacked(type(AsUSD).creationCode, args);
 
         vm.broadcast();
         address l = CreateX(createx).deployCreate3{value: 0}(
@@ -29,6 +29,6 @@ contract CdxUsdDeploy is Script, DeploymentConstants {
         );
 
         console2.log("Chain id: ", block.chainid);
-        console2.log("CdxUSD address: ", l);
+        console2.log("AsUSD address: ", l);
     }
 }

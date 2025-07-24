@@ -14,7 +14,7 @@ import {VariableDebtToken} from
 
 import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMath.sol";
 import {MathUtils} from "lib/astera/contracts/protocol/libraries/math/MathUtils.sol";
-import {TestCdxUSDAndLendAndStaking} from "test/helpers/TestCdxUSDAndLendAndStaking.sol";
+import {TestAsUSDAndLendAndStaking} from "test/helpers/TestAsUSDAndLendAndStaking.sol";
 import {ERC20Mock} from "../../helpers/mocks/ERC20Mock.sol";
 
 // reliquary
@@ -30,19 +30,19 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 // vault
 import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
 import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {ScdxUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
+import {SasUsdVaultStrategy} from
+    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
-// CdxUSD
-import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
-import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
-import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
-import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+// AsUSD
+import {AsUSD} from "contracts/tokens/AsUSD.sol";
+import {AsUsdIInterestRateStrategy} from
+    "contracts/facilitators/astera/interest_strategy/AsUsdIInterestRateStrategy.sol";
+import {AsUsdOracle} from "contracts/facilitators/astera/oracle/AsUSDOracle.sol";
+import {AsUsdAToken} from "contracts/facilitators/astera/token/AsUsdAToken.sol";
+import {AsUsdVariableDebtToken} from
+    "contracts/facilitators/astera/token/AsUsdVariableDebtToken.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
 import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
 
@@ -67,14 +67,14 @@ event Borrow(
 
 event Repay(address indexed reserve, address indexed user, address indexed repayer, uint256 amount);
 
-contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
+contract TestAsUSDAstera2 is TestAsUSDAndLendAndStaking {
     using WadRayMath for uint256;
 
     uint256 NR_OF_ASSETS = 3;
 
     address notApproved = makeAddr("NotApproved");
 
-    // classical deposit/withdraw without cdxUSD
+    // classical deposit/withdraw without asUSD
     function testDepositsAndWithdrawals(uint256 amount) public {
         address user = makeAddr("user");
 
@@ -127,7 +127,7 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         erc20Tokens[2].approve(address(deployedContracts.lendingPool), type(uint256).max);
         deployedContracts.lendingPool.deposit(address(erc20Tokens[2]), true, 10000e18, user);
 
-        // Borrow/Mint cdxUSD
+        // Borrow/Mint asUSD
         uint256 amountMintDai = 1000e18;
         vm.startPrank(user);
         deployedContracts.lendingPool.borrow(address(erc20Tokens[2]), true, amountMintDai, user);
@@ -144,10 +144,10 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         deployedContracts.lendingPool.repay(address(erc20Tokens[2]), true, amountMintDai / 2, user);
         (,,,,, uint256 healthFactor2) = deployedContracts.lendingPool.getUserAccountData(user);
         assertGt(healthFactor2, healthFactor1);
-        assertGt(balanceUserBefore, cdxUsd.balanceOf(user));
+        assertGt(balanceUserBefore, asUsd.balanceOf(user));
     }
 
-    function testCdxUsdBorrow() public {
+    function testAsUsdBorrow() public {
         address user = makeAddr("user");
         uint256 amount = 1e18;
 
@@ -165,21 +165,21 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
             _userAWethBalanceBefore + amount, commonContracts.aTokens[1].balanceOf(address(user))
         );
 
-        // Borrow/Mint cdxUSD
-        uint256 amountMintCdxUsd = 1000e18;
+        // Borrow/Mint asUSD
+        uint256 amountMintAsUsd = 1000e18;
         vm.startPrank(user);
-        deployedContracts.lendingPool.borrow(address(cdxUsd), false, amountMintCdxUsd, user);
-        uint256 balanceUserBefore = cdxUsd.balanceOf(user);
-        assertEq(amountMintCdxUsd, balanceUserBefore);
+        deployedContracts.lendingPool.borrow(address(asUsd), false, amountMintAsUsd, user);
+        uint256 balanceUserBefore = asUsd.balanceOf(user);
+        assertEq(amountMintAsUsd, balanceUserBefore);
         (uint256 totalCollateralETH, uint256 totalDebtETH,,,, uint256 healthFactor1) =
             deployedContracts.lendingPool.getUserAccountData(user);
 
         vm.startPrank(user);
-        cdxUsd.approve(address(deployedContracts.lendingPool), type(uint256).max);
-        deployedContracts.lendingPool.repay(address(cdxUsd), false, amountMintCdxUsd / 2, user);
+        asUsd.approve(address(deployedContracts.lendingPool), type(uint256).max);
+        deployedContracts.lendingPool.repay(address(asUsd), false, amountMintAsUsd / 2, user);
         (,,,,, uint256 healthFactor2) = deployedContracts.lendingPool.getUserAccountData(user);
         assertGt(healthFactor2, healthFactor1);
-        assertGt(balanceUserBefore, cdxUsd.balanceOf(user));
+        assertGt(balanceUserBefore, asUsd.balanceOf(user));
     }
 
     function testBorrowRepay() public {
@@ -298,11 +298,11 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         }
     }
 
-    function testFlasloanCdxUsd() public {
+    function testFlasloanAsUsd() public {
         address user = makeAddr("user");
         uint256 amount = 1000e18;
 
-        // supply cdxUSD
+        // supply asUSD
 
         /* Deposit on behalf of user */
         erc20Tokens[0].approve(address(deployedContracts.lendingPool), 1e8);
@@ -321,10 +321,10 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         uint256[] memory balancesBefore = new uint256[](1);
 
         reserveTypes[0] = true;
-        tokenAddresses[0] = address(cdxUsd);
+        tokenAddresses[0] = address(asUsd);
         amounts[0] = 1e18;
         modes[0] = 0;
-        balancesBefore[0] = cdxUsd.balanceOf(address(this));
+        balancesBefore[0] = asUsd.balanceOf(address(this));
 
         ILendingPool.FlashLoanParams memory flashloanParams =
             ILendingPool.FlashLoanParams(address(this), tokenAddresses, reserveTypes, address(this));
@@ -336,29 +336,29 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         );
     }
 
-    function testLiquidationOfCdxUsd(uint256 priceDecrease, uint256 idx) public {
+    function testLiquidationOfAsUsd(uint256 priceDecrease, uint256 idx) public {
         idx = bound(idx, 0, 2);
         ERC20 wbtc = ERC20(erc20Tokens[idx]);
-        ERC20 cdxUsd = ERC20(erc20Tokens[3]);
+        ERC20 asUsd = ERC20(erc20Tokens[3]);
 
-        uint256 cdxUsdPrice = commonContracts.oracle.getAssetPrice(address(cdxUsd));
+        uint256 asUsdPrice = commonContracts.oracle.getAssetPrice(address(asUsd));
         uint256 wbtcPrice = commonContracts.oracle.getAssetPrice(address(wbtc));
         {
             uint256 wbtcDepositAmount = 10 ** wbtc.decimals();
             (, uint256 wbtcLtv,,,,,,,) = deployedContracts
                 .protocolDataProvider
                 .getReserveConfigurationData(
-                address(wbtc), address(wbtc) == address(cdxUsd) ? false : true
+                address(wbtc), address(wbtc) == address(asUsd) ? false : true
             );
 
             uint256 wbtcMaxBorrowAmount = wbtcLtv * wbtcDepositAmount / 10_000;
-            uint256 cdxUsdMaxBorrowAmountWithWbtcCollateral = (
-                (wbtcMaxBorrowAmount * wbtcPrice * 10 ** (cdxUsd.decimals() - wbtc.decimals()))
+            uint256 asUsdMaxBorrowAmountWithWbtcCollateral = (
+                (wbtcMaxBorrowAmount * wbtcPrice * 10 ** (asUsd.decimals() - wbtc.decimals()))
                     / (10 ** PRICE_FEED_DECIMALS)
             );
             require(
-                cdxUsd.balanceOf(address(this)) > cdxUsdMaxBorrowAmountWithWbtcCollateral,
-                "Too less cdxUsd"
+                asUsd.balanceOf(address(this)) > asUsdMaxBorrowAmountWithWbtcCollateral,
+                "Too less asUsd"
             );
 
             /* Main user deposits usdc and wants to borrow */
@@ -366,9 +366,9 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
             deployedContracts.lendingPool.deposit(
                 address(wbtc), true, wbtcDepositAmount, address(this)
             );
-            /* Main user borrows maxPossible amount of cdxUsd */
+            /* Main user borrows maxPossible amount of asUsd */
             deployedContracts.lendingPool.borrow(
-                address(cdxUsd), false, cdxUsdMaxBorrowAmountWithWbtcCollateral - 1, address(this)
+                address(asUsd), false, asUsdMaxBorrowAmountWithWbtcCollateral - 1, address(this)
             );
         }
         {
@@ -388,18 +388,18 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
 
             uint256 newPrice = (wbtcPrice - wbtcPrice * priceDecrease / 10_000);
             prices[idx] = int256(newPrice);
-            prices[3] = int256(cdxUsdPrice);
+            prices[3] = int256(asUsdPrice);
 
             address[] memory aggregators = new address[](4);
             uint256[] memory timeouts = new uint256[](4);
             (, aggregators, timeouts) = fixture_getTokenPriceFeeds(erc20Tokens, prices);
 
             commonContracts.oracle.setAssetSources(tokens, aggregators, timeouts);
-            cdxUsdPrice = newPrice;
+            asUsdPrice = newPrice;
         }
 
-        ReserveDataParams memory cdxUsdReserveParamsBefore =
-            fixture_getReserveData(address(cdxUsd), deployedContracts.protocolDataProvider);
+        ReserveDataParams memory asUsdReserveParamsBefore =
+            fixture_getReserveData(address(asUsd), deployedContracts.protocolDataProvider);
         ReserveDataParams memory wbtcReserveParamsBefore =
             fixture_getReserveData(address(wbtc), deployedContracts.protocolDataProvider);
         {
@@ -416,28 +416,28 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         {
             (, uint256 debtToCover, uint256 _scaledVariableDebt,,) = deployedContracts
                 .protocolDataProvider
-                .getUserReserveData(address(cdxUsd), false, address(this));
+                .getUserReserveData(address(asUsd), false, address(this));
             amountToLiquidate = debtToCover / 2; // maximum possible liquidation amount
             scaledVariableDebt = _scaledVariableDebt;
         }
         {
             /* prepare funds */
             address liquidator = makeAddr("liquidator");
-            cdxUsd.transfer(liquidator, amountToLiquidate);
+            asUsd.transfer(liquidator, amountToLiquidate);
 
             vm.startPrank(liquidator);
-            cdxUsd.approve(address(deployedContracts.lendingPool), amountToLiquidate);
+            asUsd.approve(address(deployedContracts.lendingPool), amountToLiquidate);
             deployedContracts.lendingPool.liquidationCall(
-                address(wbtc), true, address(cdxUsd), false, address(this), amountToLiquidate, false
+                address(wbtc), true, address(asUsd), false, address(this), amountToLiquidate, false
             );
             vm.stopPrank();
         }
         /**
          * LIQUIDATION PROCESS - END ***********
          */
-        uint256 cdxUsdBalanceBefore = IERC20Detailed(address(cdxUsd)).balanceOf(address(this));
-        ReserveDataParams memory cdxUsdReserveParamsAfter =
-            fixture_getReserveData(address(cdxUsd), deployedContracts.protocolDataProvider);
+        uint256 asUsdBalanceBefore = IERC20Detailed(address(asUsd)).balanceOf(address(this));
+        ReserveDataParams memory asUsdReserveParamsAfter =
+            fixture_getReserveData(address(asUsd), deployedContracts.protocolDataProvider);
         ReserveDataParams memory wbtcReserveParamsAfter =
             fixture_getReserveData(address(wbtc), deployedContracts.protocolDataProvider);
         uint256 expectedCollateralLiquidated;
@@ -447,14 +447,14 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
                 .protocolDataProvider
                 .getReserveConfigurationData(address(wbtc), true);
 
-            expectedCollateralLiquidated = cdxUsdPrice
+            expectedCollateralLiquidated = asUsdPrice
                 * (amountToLiquidate * liquidationBonus / 10_000) * 10 ** wbtc.decimals()
-                / (wbtcPrice * 10 ** cdxUsd.decimals());
+                / (wbtcPrice * 10 ** asUsd.decimals());
         }
         uint256 variableDebtBeforeTx = fixture_calcExpectedVariableDebtTokenBalance(
-            cdxUsdReserveParamsBefore.variableBorrowRate,
-            cdxUsdReserveParamsBefore.variableBorrowIndex,
-            cdxUsdReserveParamsBefore.lastUpdateTimestamp,
+            asUsdReserveParamsBefore.variableBorrowRate,
+            asUsdReserveParamsBefore.variableBorrowIndex,
+            asUsdReserveParamsBefore.lastUpdateTimestamp,
             scaledVariableDebt,
             block.timestamp
         );
@@ -467,7 +467,7 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
         {
             (, uint256 currentVariableDebt,,,) = deployedContracts
                 .protocolDataProvider
-                .getUserReserveData(address(cdxUsd), false, address(this));
+                .getUserReserveData(address(asUsd), false, address(this));
 
             assertApproxEqRel(
                 currentVariableDebt,
@@ -476,23 +476,23 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
                 "Debt not accurate"
             );
             console2.log(
-                "cdxUsdReserveParamsAfter.availableLiquidity: ",
-                cdxUsdReserveParamsAfter.availableLiquidity
+                "asUsdReserveParamsAfter.availableLiquidity: ",
+                asUsdReserveParamsAfter.availableLiquidity
             );
             console2.log(
-                "cdxUsdReserveParamsBefore.availableLiquidity: ",
-                cdxUsdReserveParamsBefore.availableLiquidity
+                "asUsdReserveParamsBefore.availableLiquidity: ",
+                asUsdReserveParamsBefore.availableLiquidity
             );
             console2.log("amountToLiquidate: ", amountToLiquidate);
             // assertApproxEqRel(
-            //     cdxUsdReserveParamsAfter.availableLiquidity,
-            //     cdxUsdReserveParamsBefore.availableLiquidity + amountToLiquidate,
+            //     asUsdReserveParamsAfter.availableLiquidity,
+            //     asUsdReserveParamsBefore.availableLiquidity + amountToLiquidate,
             //     0.01e18,
             //     "Available liquidity not accurate"
             // );
             assertGe(
-                cdxUsdReserveParamsAfter.liquidityIndex,
-                cdxUsdReserveParamsBefore.liquidityIndex,
+                asUsdReserveParamsAfter.liquidityIndex,
+                asUsdReserveParamsBefore.liquidityIndex,
                 "Liquidity Index Less than before"
             );
         }
@@ -559,7 +559,7 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
             prices[0] = int256(newPrice);
             prices[1] = int256(commonContracts.oracle.getAssetPrice(address(weth)));
             prices[2] = int256(commonContracts.oracle.getAssetPrice(address(dai)));
-            prices[3] = int256(commonContracts.oracle.getAssetPrice(address(cdxUsd)));
+            prices[3] = int256(commonContracts.oracle.getAssetPrice(address(asUsd)));
             address[] memory aggregators = new address[](4);
             uint256[] memory timeouts = new uint256[](4);
             (, aggregators, timeouts) = fixture_getTokenPriceFeeds(erc20Tokens, prices);
@@ -718,7 +718,7 @@ contract TestCdxUSDAstera2 is TestCdxUSDAndLendAndStaking {
             prices[0] = int256(newPrice);
             prices[1] = int256(commonContracts.oracle.getAssetPrice(address(weth)));
             prices[2] = int256(commonContracts.oracle.getAssetPrice(address(dai)));
-            prices[3] = int256(commonContracts.oracle.getAssetPrice(address(cdxUsd)));
+            prices[3] = int256(commonContracts.oracle.getAssetPrice(address(asUsd)));
             address[] memory aggregators = new address[](4);
             uint256[] memory timeouts = new uint256[](4);
             (, aggregators, timeouts) = fixture_getTokenPriceFeeds(erc20Tokens, prices);

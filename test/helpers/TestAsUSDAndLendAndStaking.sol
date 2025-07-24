@@ -18,7 +18,7 @@ import {AsteraDataProvider} from "lib/astera/contracts/misc/AsteraDataProvider.s
 // Balancer
 import "forge-std/console2.sol";
 
-import {TestCdxUSDAndLend} from "test/helpers/TestCdxUSDAndLend.sol";
+import {TestAsUSDAndLend} from "test/helpers/TestAsUSDAndLend.sol";
 import {ERC20Mock} from "test/helpers/mocks/ERC20Mock.sol";
 
 // reliquary
@@ -34,19 +34,19 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 // vault
 import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
 import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {ScdxUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
+import {SasUsdVaultStrategy} from
+    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
-// CdxUSD
-import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
-import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
-import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
-import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+// AsUSD
+import {AsUSD} from "contracts/tokens/AsUSD.sol";
+import {AsUsdIInterestRateStrategy} from
+    "contracts/facilitators/astera/interest_strategy/AsUsdIInterestRateStrategy.sol";
+import {AsUsdOracle} from "contracts/facilitators/astera/oracle/AsUSDOracle.sol";
+import {AsUsdAToken} from "contracts/facilitators/astera/token/AsUsdAToken.sol";
+import {AsUsdVariableDebtToken} from
+    "contracts/facilitators/astera/token/AsUsdVariableDebtToken.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
 
 /// balancer V3 imports
@@ -72,7 +72,7 @@ import {TRouter} from "./TRouter.sol";
 import {IVaultExplorer} from
     "lib/balancer-v3-monorepo/pkg/interfaces/contracts/vault/IVaultExplorer.sol";
 
-contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
+contract TestAsUSDAndLendAndStaking is TestAsUSDAndLend, ERC721Holder {
     using WadRayMath for uint256;
     // using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     // using ReserveBorrowConfiguration for DataTypes.ReserveBorrowConfigurationMap;
@@ -83,7 +83,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
     IReliquary public reliquary;
     RollingRewarder public rewarder;
     ReaperVaultV2 public asteraVault;
-    ScdxUsdVaultStrategy public strategy;
+    SasUsdVaultStrategy public strategy;
     IERC20 public mockRewardToken;
     BalancerV3Router public balancerV3Router;
 
@@ -93,14 +93,14 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
     uint256 public plateauTimestamp = 10 days;
     uint256 private constant RELIC_ID = 1;
 
-    uint256 public indexCdxUsd;
+    uint256 public indexAsUsd;
     uint256 public indexCounterAsset;
 
-    // CdxUSD public cdxUsd;
-    CdxUsdIInterestRateStrategy public cdxUsdInterestRateStrategy;
-    CdxUsdOracle public cdxUsdOracle;
-    CdxUsdAToken public cdxUsdAToken;
-    CdxUsdVariableDebtToken public cdxUsdVariableDebtToken;
+    // AsUSD public asUsd;
+    AsUsdIInterestRateStrategy public asUsdInterestRateStrategy;
+    AsUsdOracle public asUsdOracle;
+    AsUsdAToken public asUsdAToken;
+    AsUsdVariableDebtToken public asUsdVariableDebtToken;
     MockV3Aggregator public counterAssetPriceFeed;
 
     function setUp() public virtual override {
@@ -110,7 +110,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
         /// ======= Balancer Pool Deploy =======
         {
             assets.push(IERC20(address(counterAsset)));
-            assets.push(IERC20(address(cdxUsd)));
+            assets.push(IERC20(address(asUsd)));
 
             IERC20[] memory assetsSorted = sort(assets);
             assets[0] = assetsSorted[0];
@@ -122,15 +122,15 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             // join Pool
             IERC20[] memory setupPoolTokens = IVaultExplorer(vaultV3).getPoolTokens(poolAdd);
 
-            uint256 indexCdxUsdTemp;
+            uint256 indexAsUsdTemp;
             uint256 indexCounterAssetTemp;
             for (uint256 i = 0; i < setupPoolTokens.length; i++) {
-                if (setupPoolTokens[i] == cdxUsd) indexCdxUsdTemp = i;
+                if (setupPoolTokens[i] == asUsd) indexAsUsdTemp = i;
                 if (setupPoolTokens[i] == IERC20(address(counterAsset))) indexCounterAssetTemp = i;
             }
 
             uint256[] memory amountsToAdd = new uint256[](setupPoolTokens.length);
-            amountsToAdd[indexCdxUsdTemp] = INITIAL_CDXUSD_AMT;
+            amountsToAdd[indexAsUsdTemp] = INITIAL_ASUSD_AMT;
             amountsToAdd[indexCounterAssetTemp] = INITIAL_COUNTER_ASSET_AMT;
 
             vm.prank(userA);
@@ -140,7 +140,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             IERC20(poolAdd).transfer(address(this), 1);
 
             for (uint256 i = 0; i < assets.length; i++) {
-                if (assets[i] == cdxUsd) indexCdxUsd = i;
+                if (assets[i] == asUsd) indexAsUsd = i;
                 if (assets[i] == IERC20(address(counterAsset))) {
                     indexCounterAsset = i;
                 }
@@ -151,7 +151,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
         {
             mockRewardToken = IERC20(address(new ERC20Mock(18)));
             reliquary =
-                new Reliquary(address(mockRewardToken), 0, "Reliquary scdxUSD", "scdxUSD Relic");
+                new Reliquary(address(mockRewardToken), 0, "Reliquary sasUSD", "sasUSD Relic");
             address linearPlateauCurve =
                 address(new LinearPlateauCurve(slope, minMultiplier, plateauTimestamp));
 
@@ -169,19 +169,19 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
                 address(poolAdd), // BTP
                 address(parentRewarder),
                 ICurves(linearPlateauCurve),
-                "scdxUSD Pool",
+                "sasUSD Pool",
                 nftDescriptor,
                 true,
                 address(this) // can send to the strategy directly.
             );
 
             rewarder =
-                RollingRewarder(ParentRollingRewarder(parentRewarder).createChild(address(cdxUsd)));
-            IERC20(cdxUsd).approve(address(reliquary), type(uint256).max);
-            IERC20(cdxUsd).approve(address(rewarder), type(uint256).max);
+                RollingRewarder(ParentRollingRewarder(parentRewarder).createChild(address(asUsd)));
+            IERC20(asUsd).approve(address(reliquary), type(uint256).max);
+            IERC20(asUsd).approve(address(rewarder), type(uint256).max);
         }
 
-        /// ========== scdxUSD Vault Strategy Deploy ===========
+        /// ========== sasUSD Vault Strategy Deploy ===========
         {
             address[] memory ownerArr = new address[](3);
             ownerArr[0] = address(this);
@@ -197,7 +197,7 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             asteraVault = new ReaperVaultV2(
                 poolAdd,
                 "Staked Astera USD",
-                "scdxUSD",
+                "sasUSD",
                 type(uint256).max,
                 0,
                 treasury,
@@ -206,9 +206,9 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
                 address(feeControllerMock)
             );
 
-            ScdxUsdVaultStrategy implementation = new ScdxUsdVaultStrategy();
+            SasUsdVaultStrategy implementation = new SasUsdVaultStrategy();
             ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), "");
-            strategy = ScdxUsdVaultStrategy(address(proxy));
+            strategy = SasUsdVaultStrategy(address(proxy));
 
             address[] memory ownerArr2 = new address[](2);
             ownerArr2[0] = address(strategy);
@@ -223,28 +223,28 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
                 ownerArr1,
                 ownerArr,
                 ownerArr1,
-                address(cdxUsd),
+                address(asUsd),
                 address(reliquary),
                 address(poolAdd)
             );
 
             // console2.log(address(asteraVault));
             // console2.log(address(vaultV3));
-            // console2.log(address(cdxUSD));
+            // console2.log(address(asUSD));
             // console2.log(address(reliquary));
             // console2.log(address(poolAdd));
 
             asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
         }
 
-        // ======= cdxUSD Astera dependencies deploy and configure =======
+        // ======= asUSD Astera dependencies deploy and configure =======
         {
-            cdxUsdAToken = new CdxUsdAToken();
-            cdxUsdVariableDebtToken = new CdxUsdVariableDebtToken();
-            cdxUsdOracle = new CdxUsdOracle();
-            cdxUsdInterestRateStrategy = new CdxUsdIInterestRateStrategy(
+            asUsdAToken = new AsUsdAToken();
+            asUsdVariableDebtToken = new AsUsdVariableDebtToken();
+            asUsdOracle = new AsUsdOracle();
+            asUsdInterestRateStrategy = new AsUsdIInterestRateStrategy(
                 address(deployedContracts.lendingPoolAddressesProvider),
-                address(cdxUsd),
+                address(asUsd),
                 false,
                 address(vaultV3), // balancerVault,
                 address(poolAdd),
@@ -254,25 +254,25 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             );
             counterAssetPriceFeed =
                 new MockV3Aggregator(PRICE_FEED_DECIMALS, int256(1 * 10 ** PRICE_FEED_DECIMALS));
-            cdxUsdInterestRateStrategy.setOracleValues(
+            asUsdInterestRateStrategy.setOracleValues(
                 address(counterAssetPriceFeed), 1e26, /* 10% */ 86400
             );
 
-            fixture_configureCdxUsd(
+            fixture_configureAsUsd(
                 address(deployedContracts.lendingPool),
-                address(cdxUsdAToken),
-                address(cdxUsdVariableDebtToken),
-                address(cdxUsdOracle),
-                address(cdxUsd),
-                address(cdxUsdInterestRateStrategy),
+                address(asUsdAToken),
+                address(asUsdVariableDebtToken),
+                address(asUsdOracle),
+                address(asUsd),
+                address(asUsdInterestRateStrategy),
                 address(rewarder),
                 configAddresses,
                 deployedContracts.lendingPoolConfigurator,
                 deployedContracts.lendingPoolAddressesProvider
             );
 
-            cdxUsd.addFacilitator(
-                deployedContracts.lendingPool.getReserveData(address(cdxUsd), false).aTokenAddress,
+            asUsd.addFacilitator(
+                deployedContracts.lendingPool.getReserveData(address(asUsd), false).aTokenAddress,
                 "Astera",
                 DEFAULT_CAPACITY
             );
@@ -285,20 +285,20 @@ contract TestCdxUSDAndLendAndStaking is TestCdxUSDAndLend, ERC721Holder {
             //     address(deployedContracts.aTokensAndRatesHelper)
             // );
 
-            tokens.push(address(cdxUsd));
+            tokens.push(address(asUsd));
             commonContracts.aTokens = fixture_getATokens(
                 tokens, AsteraDataProvider(configAddresses.asteraDataProvider)
             );
 
-            erc20Tokens.push(ERC20(address(cdxUsd)));
+            erc20Tokens.push(ERC20(address(asUsd)));
             // console2.log("Index: ", idx);
             (address _aTokenAddress,) = deployedContracts
                 .protocolDataProvider
-                .getReserveTokensAddresses(address(cdxUsd), false);
+                .getReserveTokensAddresses(address(asUsd), false);
             aTokens.push(AToken(_aTokenAddress));
             (, address _variableDebtToken) = deployedContracts
                 .protocolDataProvider
-                .getReserveTokensAddresses(address(cdxUsd), false);
+                .getReserveTokensAddresses(address(asUsd), false);
             variableDebtTokens.push(VariableDebtToken(_variableDebtToken));
         }
 

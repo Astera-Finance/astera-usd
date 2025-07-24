@@ -15,7 +15,7 @@ import {WadRayMath} from "lib/astera/contracts/protocol/libraries/math/WadRayMat
 import {MathUtils} from "lib/astera/contracts/protocol/libraries/math/MathUtils.sol";
 
 // Balancer
-import {TestCdxUSDAndLendAndStaking} from "test/helpers/TestCdxUSDAndLendAndStaking.sol";
+import {TestAsUSDAndLendAndStaking} from "test/helpers/TestAsUSDAndLendAndStaking.sol";
 import {ERC20Mock} from "../../helpers/mocks/ERC20Mock.sol";
 
 // reliquary
@@ -31,19 +31,19 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 // vault
 import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
 import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {ScdxUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
+import {SasUsdVaultStrategy} from
+    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
 
-// CdxUSD
-import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
-import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
-import {CdxUsdAToken} from "contracts/facilitators/astera/token/CdxUsdAToken.sol";
-import {CdxUsdVariableDebtToken} from
-    "contracts/facilitators/astera/token/CdxUsdVariableDebtToken.sol";
+// AsUSD
+import {AsUSD} from "contracts/tokens/AsUSD.sol";
+import {AsUsdIInterestRateStrategy} from
+    "contracts/facilitators/astera/interest_strategy/AsUsdIInterestRateStrategy.sol";
+import {AsUsdOracle} from "contracts/facilitators/astera/oracle/AsUSDOracle.sol";
+import {AsUsdAToken} from "contracts/facilitators/astera/token/AsUsdAToken.sol";
+import {AsUsdVariableDebtToken} from
+    "contracts/facilitators/astera/token/AsUsdVariableDebtToken.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
 import {ILendingPool} from "lib/astera/contracts/interfaces/ILendingPool.sol";
 
@@ -56,14 +56,14 @@ import {IVaultExplorer} from
 import {BalancerV3Router} from
     "contracts/staking_module/vault_strategy/libraries/BalancerV3Router.sol";
 
-contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
+contract TestBalancerV3Router is TestAsUSDAndLendAndStaking {
     BalancerV3Router public router;
 
     IERC20 public counterAsset2;
     address public poolAdd2;
     IERC20[] public assets2;
 
-    uint256 indexCdxUsd2;
+    uint256 indexAsUsd2;
     uint256 indexCounterAsset2;
 
     function setUp() public override {
@@ -76,13 +76,13 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         ERC20Mock(address(counterAsset2)).mint(userB, INITIAL_COUNTER_ASSET_AMT);
         ERC20Mock(address(counterAsset2)).mint(userC, INITIAL_COUNTER_ASSET_AMT);
         vm.startPrank(userC);
-        ERC20Mock(address(cdxUsd)).mint(userC, INITIAL_CDXUSD_AMT);
+        ERC20Mock(address(asUsd)).mint(userC, INITIAL_ASUSD_AMT);
         vm.stopPrank();
 
         vm.startPrank(userC); // address(0x1) == address(1)
-        cdxUsd.approve(address(vaultV3), type(uint256).max);
+        asUsd.approve(address(vaultV3), type(uint256).max);
         counterAsset2.approve(address(vaultV3), type(uint256).max);
-        cdxUsd.approve(address(tRouter), type(uint256).max);
+        asUsd.approve(address(tRouter), type(uint256).max);
         counterAsset2.approve(address(tRouter), type(uint256).max);
         vm.stopPrank();
 
@@ -97,7 +97,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         // ======= Balancer Pool 2 Deploy =======
         {
             assets2.push(IERC20(address(counterAsset2)));
-            assets2.push(IERC20(address(cdxUsd)));
+            assets2.push(IERC20(address(asUsd)));
 
             IERC20[] memory assetsSorted = sort(assets2);
             assets2[0] = assetsSorted[0];
@@ -110,12 +110,12 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
             IERC20[] memory setupPoolTokens = IVaultExplorer(vaultV3).getPoolTokens(poolAdd2);
 
             for (uint256 i = 0; i < setupPoolTokens.length; i++) {
-                if (setupPoolTokens[i] == cdxUsd) indexCdxUsd2 = i;
+                if (setupPoolTokens[i] == asUsd) indexAsUsd2 = i;
                 if (setupPoolTokens[i] == IERC20(address(counterAsset2))) indexCounterAsset2 = i;
             }
 
             uint256[] memory amountsToAdd = new uint256[](setupPoolTokens.length);
-            amountsToAdd[indexCdxUsd2] = 1_000_000e18;
+            amountsToAdd[indexAsUsd2] = 1_000_000e18;
             amountsToAdd[indexCounterAsset2] = 1_000_000e8;
 
             vm.prank(userC);
@@ -125,7 +125,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
             IERC20(poolAdd2).transfer(address(this), 1);
 
             for (uint256 i = 0; i < assets2.length; i++) {
-                if (assets2[i] == cdxUsd) indexCdxUsd = i;
+                if (assets2[i] == asUsd) indexAsUsd = i;
                 if (assets2[i] == IERC20(address(counterAsset2))) {
                     indexCounterAsset = i;
                 }
@@ -135,7 +135,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         // all user approve max router
         for (uint256 i = 0; i < interactors.length; i++) {
             vm.startPrank(interactors[i]);
-            cdxUsd.approve(address(router), type(uint256).max);
+            asUsd.approve(address(router), type(uint256).max);
             counterAsset.approve(address(router), type(uint256).max);
             counterAsset2.approve(address(router), type(uint256).max);
             IERC20(poolAdd).approve(address(router), type(uint256).max);
@@ -166,7 +166,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
 
         // add liquidity
         uint256[] memory amountsToAdd = new uint256[](assets2.length);
-        amountsToAdd[indexCdxUsd2] = 101100e18;
+        amountsToAdd[indexAsUsd2] = 101100e18;
         amountsToAdd[indexCounterAsset2] = 1900e8;
 
         vm.startPrank(userB);
@@ -221,14 +221,14 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         amounts[1] = 1e18;
 
         // balance before
-        uint256 cdxUsdBalanceBefore = cdxUsd.balanceOf(userB);
+        uint256 asUsdBalanceBefore = asUsd.balanceOf(userB);
         uint256 counterAssetBalanceBefore = counterAsset.balanceOf(userB);
 
         vm.startPrank(userB);
         router.addLiquidityUnbalanced(poolAdd, amounts, 0);
         vm.stopPrank();
 
-        assertEq(cdxUsd.balanceOf(userB), cdxUsdBalanceBefore - amounts[0]);
+        assertEq(asUsd.balanceOf(userB), asUsdBalanceBefore - amounts[0]);
         assertEq(counterAsset.balanceOf(userB), counterAssetBalanceBefore - amounts[1]);
 
         // remove liquidity
@@ -237,7 +237,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         amountsOut[1] = 1e18;
 
         // balance before remove liquidity
-        uint256 cdxUsdBalanceBeforeRemove = cdxUsd.balanceOf(userB);
+        uint256 asUsdBalanceBeforeRemove = asUsd.balanceOf(userB);
         uint256 counterAssetBalanceBeforeRemove = counterAsset.balanceOf(userB);
 
         vm.startPrank(userB);
@@ -245,14 +245,14 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         vm.stopPrank();
 
         console2.log(
-            "cdxUsd.balanceOf(userB) ::: ", cdxUsd.balanceOf(userB) - cdxUsdBalanceBeforeRemove
+            "asUsd.balanceOf(userB) ::: ", asUsd.balanceOf(userB) - asUsdBalanceBeforeRemove
         );
         console2.log(
             "counterAsset.balanceOf(userB) ::: ",
             counterAsset.balanceOf(userB) - counterAssetBalanceBeforeRemove
         );
 
-        assertApproxEqRel(cdxUsd.balanceOf(userB) - cdxUsdBalanceBeforeRemove, 2e18, 1e16);
+        assertApproxEqRel(asUsd.balanceOf(userB) - asUsdBalanceBeforeRemove, 2e18, 1e16);
         assertEq(IERC20(poolAdd).balanceOf(userB), 0);
     }
 
@@ -262,14 +262,14 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         amounts[1] = 1e18;
 
         // balance before
-        uint256 cdxUsdBalanceBefore = cdxUsd.balanceOf(userB);
+        uint256 asUsdBalanceBefore = asUsd.balanceOf(userB);
         uint256 counterAssetBalanceBefore = counterAsset.balanceOf(userB);
 
         vm.startPrank(userB);
         router.addLiquidityUnbalanced(poolAdd, amounts, 0);
         vm.stopPrank();
 
-        assertEq(cdxUsd.balanceOf(userB), cdxUsdBalanceBefore - amounts[0]);
+        assertEq(asUsd.balanceOf(userB), asUsdBalanceBefore - amounts[0]);
         assertEq(counterAsset.balanceOf(userB), counterAssetBalanceBefore - amounts[1]);
 
         // remove liquidity
@@ -278,7 +278,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         amountsOut[1] = 1e18;
 
         // balance before remove liquidity
-        uint256 cdxUsdBalanceBeforeRemove = cdxUsd.balanceOf(userB);
+        uint256 asUsdBalanceBeforeRemove = asUsd.balanceOf(userB);
         uint256 counterAssetBalanceBeforeRemove = counterAsset.balanceOf(userB);
 
         vm.startPrank(userB);
@@ -286,7 +286,7 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         vm.stopPrank();
 
         console2.log(
-            "cdxUsd.balanceOf(userB) ::: ", cdxUsd.balanceOf(userB) - cdxUsdBalanceBeforeRemove
+            "asUsd.balanceOf(userB) ::: ", asUsd.balanceOf(userB) - asUsdBalanceBeforeRemove
         );
         console2.log(
             "counterAsset.balanceOf(userB) ::: ",
@@ -307,14 +307,14 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         amounts[0] = 1e18;
         amounts[1] = 1e18;
 
-        uint256 cdxUsdBalanceBefore = cdxUsd.balanceOf(userB);
+        uint256 asUsdBalanceBefore = asUsd.balanceOf(userB);
         uint256 counterAssetBalanceBefore = counterAsset.balanceOf(userB);
 
         vm.startPrank(userB);
         tRouter.addLiquidity(poolAdd, userB, amounts);
 
         assertEq(counterAsset.balanceOf(userB), counterAssetBalanceBefore - amounts[0]);
-        assertEq(cdxUsd.balanceOf(userB), cdxUsdBalanceBefore - amounts[1]);
+        assertEq(asUsd.balanceOf(userB), asUsdBalanceBefore - amounts[1]);
 
         amounts[0] = 0;
         amounts[1] = 1e18;
@@ -329,15 +329,15 @@ contract TestBalancerV3Router is TestCdxUSDAndLendAndStaking {
         vm.stopPrank();
 
         assertEq(counterAsset.balanceOf(userB), counterAssetBalanceBefore);
-        assertEq(cdxUsd.balanceOf(userB), cdxUsdBalanceBefore - 1e18);
+        assertEq(asUsd.balanceOf(userB), asUsdBalanceBefore - 1e18);
 
-        cdxUsdBalanceBefore = cdxUsd.balanceOf(userB);
+        asUsdBalanceBefore = asUsd.balanceOf(userB);
         counterAssetBalanceBefore = counterAsset.balanceOf(userB);
 
         vm.prank(userB);
-        tRouter.swapSingleTokenExactIn(poolAdd, cdxUsd, IERC20(address(counterAsset)), 1e18 / 2, 0);
+        tRouter.swapSingleTokenExactIn(poolAdd, asUsd, IERC20(address(counterAsset)), 1e18 / 2, 0);
 
-        assertApproxEqRel(cdxUsd.balanceOf(userB), cdxUsdBalanceBefore - 1e18 / 2, 1e16); // 1%
+        assertApproxEqRel(asUsd.balanceOf(userB), asUsdBalanceBefore - 1e18 / 2, 1e16); // 1%
         assertApproxEqRel(counterAsset.balanceOf(userB), counterAssetBalanceBefore + 1e18 / 2, 1e16); // 1%
     }
 

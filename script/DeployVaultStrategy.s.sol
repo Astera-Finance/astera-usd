@@ -8,8 +8,8 @@ import {BalancerV3Router} from
     "contracts/staking_module/vault_strategy/libraries/BalancerV3Router.sol";
 import {IFeeController} from "lib/Astera-Vault/src/interfaces/IFeeController.sol";
 import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {ScdxUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
+import {SasUsdVaultStrategy} from
+    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Reliquary} from "contracts/staking_module/reliquary/Reliquary.sol";
 
@@ -17,18 +17,18 @@ import {console2} from "forge-std/console2.sol";
 
 contract DeployVaultStrategy is Script, DeploymentConstants {
     string constant VAULT_NAME = "Staked Astera USD";
-    string constant VAULT_SYMBOL = "scdxUsd";
+    string constant VAULT_SYMBOL = "sasUsd";
     uint256 constant RELIC_ID = 1;
 
     address constant STABLE_POOL = address(1); // fill with deployed stable pool
     address constant RELIQUARY = address(2);
 
     function run() public returns (address, address, address) {
-        /// ========== scdxUsd Vault Strategy Deploy ===========
+        /// ========== sasUsd Vault Strategy Deploy ===========
 
         address FEE_CONTROLLER = address(new FeeControllerMock());
         {
-            console2.log("====== scdxUsd Vault Strategy Deployment ======");
+            console2.log("====== sasUsd Vault Strategy Deployment ======");
             initializeConstants();
             uint256 pk = vm.envUint("PRIVATE_KEY");
             address deployer = vm.addr(pk);
@@ -62,9 +62,9 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
                 FEE_CONTROLLER
             );
 
-            ScdxUsdVaultStrategy implementation = new ScdxUsdVaultStrategy();
+            SasUsdVaultStrategy implementation = new SasUsdVaultStrategy();
             ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), "");
-            ScdxUsdVaultStrategy strategy = ScdxUsdVaultStrategy(address(proxy));
+            SasUsdVaultStrategy strategy = SasUsdVaultStrategy(address(proxy));
 
             Reliquary(RELIQUARY).transferFrom(deployer, address(strategy), RELIC_ID); // transfer Relic#1 to strategy.
 
@@ -79,7 +79,7 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
                 ownerArr1, // @audit put ownerArrStrategy
                 ownerArr, // @audit put ownerArrStrategy
                 ownerArr1, // @audit create a keeper arrays with multisignAdmin, multisignGuardian and ask wetzo for the keeper address he will setup.
-                address(cdxUsd),
+                address(asUsd),
                 address(RELIQUARY),
                 address(STABLE_POOL)
             );

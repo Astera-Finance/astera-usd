@@ -6,8 +6,8 @@ import "contracts/interfaces/IReliquary.sol";
 
 /// Astera imports
 import {ReaperVaultV2 as AsteraVault} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {ScdxUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/ScdxUsdVaultStrategy.sol";
+import {SasUsdVaultStrategy} from
+    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 
 // Balancer imports
 import {IVault as IBalancerVault} from
@@ -28,7 +28,7 @@ import {BalancerV3Router} from
 /**
  * @title Zap
  * @author Conclave - Beirao
- * @notice Zap all possible scdxUSD operations.
+ * @notice Zap all possible sasUSD operations.
  */
 contract Zap is Pausable, Ownable {
     using SafeERC20 for IERC20;
@@ -40,14 +40,14 @@ contract Zap is Pausable, Ownable {
 
     /// @dev Reference to the Balancer vault contract for pool interactions.
     IBalancerVault public immutable balancerVault;
-    /// @dev Reference to the Astera vault contract where scdxUSD is deposited.
+    /// @dev Reference to the Astera vault contract where sasUSD is deposited.
     AsteraVault public immutable asteraVault;
-    /// @dev Reference to the vault strategy contract that manages scdxUSD deposits.
-    ScdxUsdVaultStrategy public immutable strategy;
+    /// @dev Reference to the vault strategy contract that manages sasUSD deposits.
+    SasUsdVaultStrategy public immutable strategy;
     /// @dev Reference to the Reliquary staking contract.
     IReliquary public immutable reliquary;
-    /// @dev Reference to the cdxUSD token contract.
-    IERC20 public immutable cdxUsd;
+    /// @dev Reference to the asUSD token contract.
+    IERC20 public immutable asUsd;
     /// @dev Reference to the counter asset token (USDC/USDT).
     IERC20 public immutable counterAsset;
     /// @dev Address with guardian privileges for emergency functions.
@@ -86,7 +86,7 @@ contract Zap is Pausable, Ownable {
      * @param _balancerV3Router Address of the BalancerV3Router contract.
      * @param _strategy Address of the vault strategy contract.
      * @param _reliquary Address of the Reliquary staking contract.
-     * @param _cdxUsd Address of the cdxUSD token.
+     * @param _asUsd Address of the asUSD token.
      * @param _counterAsset Address of the counter asset token.
      * @param _owner Address that will own the contract.
      * @param _guardian Address that will have guardian privileges.
@@ -97,20 +97,20 @@ contract Zap is Pausable, Ownable {
         address _balancerV3Router,
         address _strategy,
         address _reliquary,
-        address _cdxUsd,
+        address _asUsd,
         address _counterAsset,
         address _owner,
         address _guardian
     ) Ownable(_owner) {
         balancerVault = IBalancerVault(_balancerVault);
         asteraVault = AsteraVault(_asteraVault);
-        strategy = ScdxUsdVaultStrategy(_strategy);
+        strategy = SasUsdVaultStrategy(_strategy);
         reliquary = IReliquary(_reliquary);
-        cdxUsd = IERC20(_cdxUsd);
+        asUsd = IERC20(_asUsd);
         counterAsset = IERC20(_counterAsset);
         guardian = _guardian;
 
-        balancerPool = ScdxUsdVaultStrategy(_strategy).balancerPool();
+        balancerPool = SasUsdVaultStrategy(_strategy).balancerPool();
         balancerV3Router = BalancerV3Router(_balancerV3Router);
 
         IERC20[] memory poolTokens_ = IBalancerVault(_balancerVault).getPoolTokens(balancerPool);
@@ -125,39 +125,39 @@ contract Zap is Pausable, Ownable {
             if (IReliquary(_reliquary).getPoolInfo(RELIQUARY_POOL_ID).poolToken != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (ScdxUsdVaultStrategy(_strategy).want() != balancerPool) {
+            if (SasUsdVaultStrategy(_strategy).want() != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (ScdxUsdVaultStrategy(_strategy).vault() != _asteraVault) {
+            if (SasUsdVaultStrategy(_strategy).vault() != _asteraVault) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
             if (address(AsteraVault(_asteraVault).token()) != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (address(ScdxUsdVaultStrategy(_strategy).cdxUSD()) != _cdxUsd) {
+            if (address(SasUsdVaultStrategy(_strategy).asUSD()) != _asUsd) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (address(ScdxUsdVaultStrategy(_strategy).reliquary()) != _reliquary) {
+            if (address(SasUsdVaultStrategy(_strategy).reliquary()) != _reliquary) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (address(ScdxUsdVaultStrategy(_strategy).balancerVault()) != _balancerVault) {
+            if (address(SasUsdVaultStrategy(_strategy).balancerVault()) != _balancerVault) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (ScdxUsdVaultStrategy(_strategy).balancerPool() != balancerPool) {
+            if (SasUsdVaultStrategy(_strategy).balancerPool() != balancerPool) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
-            if (ScdxUsdVaultStrategy(_strategy).cdxUsdIndex() != tokenToIndex[address(cdxUsd)]) {
+            if (SasUsdVaultStrategy(_strategy).asUsdIndex() != tokenToIndex[address(asUsd)]) {
                 revert Zap__CONTRACT_NOT_COMPATIBLE();
             }
         }
 
         // Approvals
         {
-            IERC20(_cdxUsd).approve(_balancerVault, type(uint256).max);
+            IERC20(_asUsd).approve(_balancerVault, type(uint256).max);
             IERC20(_counterAsset).approve(_balancerVault, type(uint256).max);
             IERC20(_asteraVault).approve(_balancerVault, type(uint256).max);
 
-            IERC20(_cdxUsd).approve(_balancerV3Router, type(uint256).max);
+            IERC20(_asUsd).approve(_balancerV3Router, type(uint256).max);
             IERC20(_counterAsset).approve(_balancerV3Router, type(uint256).max);
 
             IERC20(balancerPool).approve(_asteraVault, type(uint256).max);
@@ -193,35 +193,35 @@ contract Zap is Pausable, Ownable {
         guardian = _guardian;
     }
 
-    /// ============ Staked cdxUSD ============
+    /// ============ Staked asUSD ============
 
     /**
      * @notice Zap all staking operations into a simple tx:
      *         - join balancer pool
      *         - deposit into astera vault
-     *         - send scdxUSD to user
+     *         - send sasUSD to user
      * @dev Users must first approve the amount they wish to send.
-     * @param _cdxUsdAmt cdxUSD amount to supply.
+     * @param _asUsdAmt asUSD amount to supply.
      * @param _caAmt counter asset amount to supply.
-     * @param _minScdxUsdOut slippage protection.
-     * @param _to address receiving scdxUSD.
+     * @param _minSasUsdOut slippage protection.
+     * @param _to address receiving sasUSD.
      */
-    function zapInStakedCdxUSD(
-        uint256 _cdxUsdAmt,
+    function zapInStakedAsUSD(
+        uint256 _asUsdAmt,
         uint256 _caAmt,
         address _to,
-        uint256 _minScdxUsdOut
+        uint256 _minSasUsdOut
     ) external whenNotPaused {
-        if (_cdxUsdAmt == 0 && _caAmt == 0 || _minScdxUsdOut == 0 || _to == address(0)) {
+        if (_asUsdAmt == 0 && _caAmt == 0 || _minSasUsdOut == 0 || _to == address(0)) {
             revert Zap__WRONG_INPUT();
         }
 
-        if (_cdxUsdAmt != 0) cdxUsd.transferFrom(msg.sender, address(this), _cdxUsdAmt);
+        if (_asUsdAmt != 0) asUsd.transferFrom(msg.sender, address(this), _asUsdAmt);
         if (_caAmt != 0) counterAsset.safeTransferFrom(msg.sender, address(this), _caAmt);
 
         /// Join pool
         uint256[] memory amountsToAdd_ = new uint256[](NB_BALANCER_POOL_ASSET);
-        amountsToAdd_[tokenToIndex[address(cdxUsd)]] = _cdxUsdAmt;
+        amountsToAdd_[tokenToIndex[address(asUsd)]] = _asUsdAmt;
         amountsToAdd_[tokenToIndex[address(counterAsset)]] = _caAmt;
 
         balancerV3Router.addLiquidityUnbalanced(
@@ -231,10 +231,10 @@ contract Zap is Pausable, Ownable {
         /// Astera Vault deposit
         asteraVault.depositAll();
 
-        /// Send cdxUSD
-        uint256 scdxUsdBalanceOut = asteraVault.balanceOf(address(this));
-        if (scdxUsdBalanceOut < _minScdxUsdOut) revert Zap__SLIPPAGE_CHECK_FAILED();
-        asteraVault.transfer(_to, scdxUsdBalanceOut); // SafeERC20 not needed
+        /// Send asUSD
+        uint256 sasUsdBalanceOut = asteraVault.balanceOf(address(this));
+        if (sasUsdBalanceOut < _minSasUsdOut) revert Zap__SLIPPAGE_CHECK_FAILED();
+        asteraVault.transfer(_to, sasUsdBalanceOut); // SafeERC20 not needed
     }
 
     /**
@@ -243,25 +243,25 @@ contract Zap is Pausable, Ownable {
      *         - exit balancer pool
      *         - send token(s) to user
      * @dev Users must first approve the amount they wish to send.
-     * @param _scdxUsdAmount scdxUSD amount to withdraw.
+     * @param _sasUsdAmount sasUSD amount to withdraw.
      * @param _tokenToWithdraw address of the token to be withdrawn.
      * @param _minAmountOut slippage protection.
      * @param _to address receiving tokens.
      */
-    function zapOutStakedCdxUSD(
-        uint256 _scdxUsdAmount,
+    function zapOutStakedAsUSD(
+        uint256 _sasUsdAmount,
         address _tokenToWithdraw,
         uint256 _minAmountOut,
         address _to
     ) external whenNotPaused {
-        if (_scdxUsdAmount == 0 || _minAmountOut == 0 || _to == address(0)) {
+        if (_sasUsdAmount == 0 || _minAmountOut == 0 || _to == address(0)) {
             revert Zap__WRONG_INPUT();
         }
 
-        asteraVault.transferFrom(msg.sender, address(this), _scdxUsdAmount);
+        asteraVault.transferFrom(msg.sender, address(this), _sasUsdAmount);
 
         /// Astera Vault withdraw
-        asteraVault.withdraw(_scdxUsdAmount);
+        asteraVault.withdraw(_sasUsdAmount);
 
         /// withdraw pool
         balancerV3Router.removeLiquiditySingleTokenExactIn(
@@ -287,28 +287,28 @@ contract Zap is Pausable, Ownable {
      * @dev If user wishes to deposit into an already owned relic,
      *      he must first approve this contract.
      * @param _relicId Id of the relic to deposit, 0 will create a new relic.
-     * @param _cdxUsdAmt cdxUSD amount to supply.
+     * @param _asUsdAmt asUSD amount to supply.
      * @param _caAmt counter asset amount to supply.
      * @param _to address receiving the relic.
      * @param _minBPTAmountOut slippage protection.
      */
     function zapInRelic(
         uint256 _relicId,
-        uint256 _cdxUsdAmt,
+        uint256 _asUsdAmt,
         uint256 _caAmt,
         address _to,
         uint256 _minBPTAmountOut
     ) external whenNotPaused {
-        if (_cdxUsdAmt == 0 && _caAmt == 0 || _to == address(0) || _minBPTAmountOut == 0) {
+        if (_asUsdAmt == 0 && _caAmt == 0 || _to == address(0) || _minBPTAmountOut == 0) {
             revert Zap__WRONG_INPUT();
         }
 
-        if (_cdxUsdAmt != 0) cdxUsd.safeTransferFrom(msg.sender, address(this), _cdxUsdAmt);
+        if (_asUsdAmt != 0) asUsd.safeTransferFrom(msg.sender, address(this), _asUsdAmt);
         if (_caAmt != 0) counterAsset.safeTransferFrom(msg.sender, address(this), _caAmt);
 
         /// Join pool
         uint256[] memory amountsToAdd_ = new uint256[](NB_BALANCER_POOL_ASSET);
-        amountsToAdd_[tokenToIndex[address(cdxUsd)]] = _cdxUsdAmt;
+        amountsToAdd_[tokenToIndex[address(asUsd)]] = _asUsdAmt;
         amountsToAdd_[tokenToIndex[address(counterAsset)]] = _caAmt;
 
         balancerV3Router.addLiquidityUnbalanced(balancerPool, amountsToAdd_, _minBPTAmountOut);

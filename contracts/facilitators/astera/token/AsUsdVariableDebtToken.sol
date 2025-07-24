@@ -13,13 +13,13 @@ import {IncentivizedERC20} from
     "lib/astera/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
 
 /**
- * @title CdxUsdVariableDebtToken
+ * @title AsUsdVariableDebtToken
  * @notice A variable debt token that tracks user borrowing positions with variable interest rates.
  * The token represents debt owed by users who have borrowed from the lending pool. The debt amount
  * fluctuates based on the variable interest rate applied.
  * @author Conclave - Beirao
  */
-contract CdxUsdVariableDebtToken is
+contract AsUsdVariableDebtToken is
     IncentivizedERC20("DEBTTOKEN_IMPL", "DEBTTOKEN_IMPL", 0),
     VersionedInitializable,
     IVariableDebtToken
@@ -30,8 +30,8 @@ contract CdxUsdVariableDebtToken is
     /// @dev Revision number used for version control. Set to 0x1 for initial implementation.
     uint256 public constant DEBT_TOKEN_REVISION = 0x1;
 
-    /// @dev Address of the associated CdxUsdAToken contract that handles deposits.
-    address internal _cdxUsdAToken;
+    /// @dev Address of the associated AsUsdAToken contract that handles deposits.
+    address internal _asUsdAToken;
 
     /// @dev Reference to the lending pool contract that manages lending/borrowing operations.
     ILendingPool internal _pool;
@@ -46,13 +46,13 @@ contract CdxUsdVariableDebtToken is
     IRewarder internal _incentivesController;
 
     /// @dev Maps user addresses to their debt state, tracking individual borrowing positions.
-    mapping(address => CdxUsdUserState) internal _userState;
+    mapping(address => AsUsdUserState) internal _userState;
 
     /// @dev Maps delegators to delegatees with their approved borrowing allowances.
     mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
     /// @dev Struct containing user debt state variables.
-    struct CdxUsdUserState {
+    struct AsUsdUserState {
         uint128 accumulatedDebtInterest; // Total interest accrued on user's debt.
         uint128 previousIndex; // Last recorded debt index for the user.
     }
@@ -91,7 +91,7 @@ contract CdxUsdVariableDebtToken is
 
     /// @dev Ensures only the AToken contract can call the modified function.
     modifier onlyAToken() {
-        require(msg.sender == _cdxUsdAToken, Errors.AT_CALLER_NOT_ATOKEN);
+        require(msg.sender == _asUsdAToken, Errors.AT_CALLER_NOT_ATOKEN);
         _;
     }
 
@@ -157,12 +157,12 @@ contract CdxUsdVariableDebtToken is
 
     /**
      * @dev Links this debt token to its corresponding AToken contract.
-     * @param cdxUsdAToken The address of the CdxUsdAToken to link.
+     * @param asUsdAToken The address of the AsUsdAToken to link.
      */
-    function setAToken(address cdxUsdAToken) external onlyPoolAdmin {
-        require(_cdxUsdAToken == address(0), Errors.AT_ATOKEN_ALREADY_SET);
-        require(cdxUsdAToken != address(0), Errors.AT_INVALID_ADDRESS);
-        _cdxUsdAToken = cdxUsdAToken;
+    function setAToken(address asUsdAToken) external onlyPoolAdmin {
+        require(_asUsdAToken == address(0), Errors.AT_ATOKEN_ALREADY_SET);
+        require(asUsdAToken != address(0), Errors.AT_INVALID_ADDRESS);
+        _asUsdAToken = asUsdAToken;
     }
 
     /**
@@ -396,7 +396,7 @@ contract CdxUsdVariableDebtToken is
      * @return The AToken address.
      */
     function getAToken() external view returns (address) {
-        return _cdxUsdAToken;
+        return _asUsdAToken;
     }
 
     /**

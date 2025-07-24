@@ -71,10 +71,10 @@ contract DeployBalancerPool is Script, DeploymentFixtures {
         );
 
         RollingRewarder rewarder =
-            RollingRewarder(ParentRollingRewarder(parentRewarder).createChild(address(cdxUsd)));
+            RollingRewarder(ParentRollingRewarder(parentRewarder).createChild(address(asUsd)));
         vm.stopBroadcast();
-        // IERC20(cdxUsd).approve(address(reliquary), type(uint256).max); // @audit remove this.
-        // IERC20(cdxUsd).approve(address(rewarder), type(uint256).max); // @audit remove this.
+        // IERC20(asUsd).approve(address(reliquary), type(uint256).max); // @audit remove this.
+        // IERC20(asUsd).approve(address(rewarder), type(uint256).max); // @audit remove this.
 
         // @audit ATTENTION - GRANT multisignAdmin to DEFAULT_ADMIN_ROLE in Reliquary.sol.
         // @audit ATTENTION - REVOKE msg.sender/deployer from DEFAULT_ADMIN_ROLE role!!!!!!! in Reliquary.sol.

@@ -2,15 +2,15 @@
 pragma solidity ^0.8.22;
 
 import {OFTExtended} from "./OFTExtended.sol";
-import {ICdxUSD} from "contracts/interfaces/ICdxUSD.sol";
+import {IAsUSD} from "contracts/interfaces/IAsUSD.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
- * @title CdxUSD Contract
+ * @title AsUSD Contract
  * @author Conclave - Beirao
  * Reference: https://github.com/aave/gho-core/blob/main/src/contracts/gho/GhoToken.sol
  */
-contract CdxUSD is ICdxUSD, OFTExtended {
+contract AsUSD is IAsUSD, OFTExtended {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// @dev Maps facilitator addresses to their configuration and state.
@@ -24,7 +24,7 @@ contract CdxUSD is ICdxUSD, OFTExtended {
     string internal _symbol_;
 
     /**
-     * @dev Initializes the CdxUSD token with core parameters.
+     * @dev Initializes the AsUSD token with core parameters.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
      * @param _lzEndpoint The LayerZero endpoint address.
@@ -52,13 +52,13 @@ contract CdxUSD is ICdxUSD, OFTExtended {
      * @param _amount The amount to mint
      */
     function mint(address _account, uint256 _amount) external {
-        if (_amount == 0) revert CdxUSD__INVALID_MINT_AMOUNT();
+        if (_amount == 0) revert AsUSD__INVALID_MINT_AMOUNT();
         Facilitator storage f = facilitators[msg.sender];
 
         uint256 currentBucketLevel_ = f.bucketLevel;
         uint256 newBucketLevel_ = currentBucketLevel_ + _amount;
         if (f.bucketCapacity < newBucketLevel_) {
-            revert CdxUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED();
+            revert AsUSD__FACILITATOR_BUCKET_CAPACITY_EXCEEDED();
         }
         f.bucketLevel = uint128(newBucketLevel_);
 
@@ -74,7 +74,7 @@ contract CdxUSD is ICdxUSD, OFTExtended {
      * @param _amount The amount to burn
      */
     function burn(uint256 _amount) external {
-        if (_amount == 0) revert CdxUSD__INVALID_BURN_AMOUNT();
+        if (_amount == 0) revert AsUSD__INVALID_BURN_AMOUNT();
 
         Facilitator storage f = facilitators[msg.sender];
         uint256 currentBucketLevel_ = f.bucketLevel;
@@ -100,8 +100,8 @@ contract CdxUSD is ICdxUSD, OFTExtended {
     ) external onlyOwner {
         Facilitator storage facilitator = facilitators[_facilitatorAddress];
 
-        if (bytes(facilitator.label).length != 0) revert CdxUSD__FACILITATOR_ALREADY_EXISTS();
-        if (bytes(_facilitatorLabel).length == 0) revert CdxUSD__INVALID_LABEL();
+        if (bytes(facilitator.label).length != 0) revert AsUSD__FACILITATOR_ALREADY_EXISTS();
+        if (bytes(_facilitatorLabel).length == 0) revert AsUSD__INVALID_LABEL();
 
         facilitator.label = _facilitatorLabel;
         facilitator.bucketCapacity = _bucketCapacity;
@@ -120,10 +120,10 @@ contract CdxUSD is ICdxUSD, OFTExtended {
      */
     function removeFacilitator(address _facilitatorAddress) external onlyOwner {
         if (bytes(facilitators[_facilitatorAddress].label).length == 0) {
-            revert CdxUSD__FACILITATOR_DOES_NOT_EXIST();
+            revert AsUSD__FACILITATOR_DOES_NOT_EXIST();
         }
         if (facilitators[_facilitatorAddress].bucketLevel != 0) {
-            revert CdxUSD__FACILITATOR_BUCKET_LEVEL_NOT_ZERO();
+            revert AsUSD__FACILITATOR_BUCKET_LEVEL_NOT_ZERO();
         }
 
         delete facilitators[_facilitatorAddress];
@@ -143,7 +143,7 @@ contract CdxUSD is ICdxUSD, OFTExtended {
         onlyOwner
     {
         if (bytes(facilitators[_facilitator].label).length == 0) {
-            revert CdxUSD__FACILITATOR_DOES_NOT_EXIST();
+            revert AsUSD__FACILITATOR_DOES_NOT_EXIST();
         }
 
         uint256 oldCapacity_ = facilitators[_facilitator].bucketCapacity;

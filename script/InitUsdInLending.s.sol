@@ -8,15 +8,15 @@ import {
     PoolReserversConfig,
     ILendingPool,
     ILendingPoolAddressesProvider,
-    CdxUsdAToken,
-    CdxUsdVariableDebtToken,
+    AsUsdAToken,
+    AsUsdVariableDebtToken,
     DataTypes
 } from "./DeploymentFixtures.s.sol";
-import {CdxUsdOracle} from "contracts/facilitators/astera/oracle/CdxUSDOracle.sol";
+import {AsUsdOracle} from "contracts/facilitators/astera/oracle/AsUSDOracle.sol";
 import {MockV3Aggregator} from "test/helpers/mocks/MockV3Aggregator.sol";
-import {CdxUsdIInterestRateStrategy} from
-    "contracts/facilitators/astera/interest_strategy/CdxUsdIInterestRateStrategy.sol";
-import {CdxUSD} from "contracts/tokens/CdxUSD.sol";
+import {AsUsdIInterestRateStrategy} from
+    "contracts/facilitators/astera/interest_strategy/AsUsdIInterestRateStrategy.sol";
+import {AsUSD} from "contracts/tokens/AsUSD.sol";
 
 import {console2} from "forge-std/console2.sol";
 
@@ -26,7 +26,7 @@ contract InitUsdInLending is Script, DeploymentFixtures {
     uint256 constant PEG_MARGIN = 1e26; // 10%
     uint8 constant PRICE_FEED_DECIMALS = 8;
 
-    address constant CDX_USD_INTEREST_STRATEGY = address(2); // Fill with deployed contract
+    address constant AS_USD_INTEREST_STRATEGY = address(2); // Fill with deployed contract
     address constant RELIQUARY = address(3); // Fill with deployed contract
 
     function run() public {
@@ -44,14 +44,14 @@ contract InitUsdInLending is Script, DeploymentFixtures {
 
         console2.log("========= aTokens Deploy =========");
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        address cdxUsdAToken = address(new CdxUsdAToken());
-        address cdxUsdVariableDebtToken = address(new CdxUsdVariableDebtToken());
+        address asUsdAToken = address(new AsUsdAToken());
+        address asUsdVariableDebtToken = address(new AsUsdVariableDebtToken());
 
         console2.log("========= Oracle Deploy =========");
-        address cdxUsdAggregator = address(new CdxUsdOracle());
+        address asUsdAggregator = address(new AsUsdOracle());
         MockV3Aggregator counterAssetPriceFeed =
             new MockV3Aggregator(PRICE_FEED_DECIMALS, int256(1 * 10 ** PRICE_FEED_DECIMALS));
-        CdxUsdIInterestRateStrategy(CDX_USD_INTEREST_STRATEGY).setOracleValues(
+        AsUsdIInterestRateStrategy(AS_USD_INTEREST_STRATEGY).setOracleValues(
             address(counterAssetPriceFeed), PEG_MARGIN, ORACLE_TIMEOUT
         );
 
@@ -63,49 +63,49 @@ contract InitUsdInLending is Script, DeploymentFixtures {
                 oracle: extContracts.oracle,
                 lendingPoolConfigurator: extContracts.lendingPoolConfigurator,
                 lendingPoolAddressesProvider: extContracts.lendingPoolAddressesProvider,
-                aTokenImpl: cdxUsdAToken,
-                variableDebtTokenImpl: cdxUsdVariableDebtToken,
-                interestStrat: CDX_USD_INTEREST_STRATEGY
+                aTokenImpl: asUsdAToken,
+                variableDebtTokenImpl: asUsdVariableDebtToken,
+                interestStrat: AS_USD_INTEREST_STRATEGY
             });
-            console2.log("=== cdxUsd configuration ===");
+            console2.log("=== asUsd configuration ===");
             PoolReserversConfig memory poolReserversConfig =
                 PoolReserversConfig({borrowingEnabled: true, reserveFactor: 0, reserveType: false});
-            fixture_configureCdxUsd( // @audit plz avoid dependencies to tests/. create a "deployement version" of fixture_configureCdxUsd. that perfectly respect the "LendingPool Configuration Checklist."
+            fixture_configureAsUsd( // @audit plz avoid dependencies to tests/. create a "deployement version" of fixture_configureAsUsd. that perfectly respect the "LendingPool Configuration Checklist."
                 extContractsForConfiguration,
                 poolReserversConfig,
-                address(cdxUsd),
+                address(asUsd),
                 RELIQUARY,
-                cdxUsdAggregator,
+                asUsdAggregator,
                 RELIQUARY_ALLOCATION,
                 ORACLE_TIMEOUT,
                 deployer,
                 keeper
             );
-            // fixture_configureReservesCdxUsd(
-            //     extContractsForConfiguration, poolReserversConfig, cdxUsd, deployer
+            // fixture_configureReservesAsUsd(
+            //     extContractsForConfiguration, poolReserversConfig, asUsd, deployer
             // );
 
-            /// CdxUsdAToken settings
-            // contractsToDeploy.cdxUsdAToken.setVariableDebtToken(
-            //     address(contractsToDeploy.cdxUsdVariableDebtToken)
+            /// AsUsdAToken settings
+            // contractsToDeploy.asUsdAToken.setVariableDebtToken(
+            //     address(contractsToDeploy.asUsdVariableDebtToken)
             // );
             // ILendingPoolConfigurator(extContracts.lendingPoolConfigurator).setTreasury(
-            //     address(cdxUsd), poolReserversConfig.reserveType, constantsTreasury
+            //     address(asUsd), poolReserversConfig.reserveType, constantsTreasury
             // );
-            // contractsToDeploy.cdxUsdAToken.setReliquaryInfo(
+            // contractsToDeploy.asUsdAToken.setReliquaryInfo(
             //     address(contractsToDeploy.reliquary), RELIQUARY_ALLOCATION
             // );
-            // contractsToDeploy.cdxUsdAToken.setKeeper(address(this));
+            // contractsToDeploy.asUsdAToken.setKeeper(address(this));
 
-            // /// CdxUsdVariableDebtToken settings
-            // contractsToDeploy.cdxUsdVariableDebtToken.setAToken(
-            //     address(contractsToDeploy.cdxUsdAToken)
+            // /// AsUsdVariableDebtToken settings
+            // contractsToDeploy.asUsdVariableDebtToken.setAToken(
+            //     address(contractsToDeploy.asUsdAToken)
             // );
             console2.log("=== Adding Facilitator ===");
             DataTypes.ReserveData memory reserveData =
-                lendingPool.getReserveData(cdxUsd, poolReserversConfig.reserveType);
-            // vm.prank(CdxUSD(cdxUsd).owner());
-            CdxUSD(cdxUsd).addFacilitator(reserveData.aTokenAddress, "aToken", 100e18); // @audit define a default capacity in a configuration file. instead of 100e18 + this should be 100000e18 or 1000000e18 at launch at least.
+                lendingPool.getReserveData(asUsd, poolReserversConfig.reserveType);
+            // vm.prank(AsUSD(asUsd).owner());
+            AsUSD(asUsd).addFacilitator(reserveData.aTokenAddress, "aToken", 100e18); // @audit define a default capacity in a configuration file. instead of 100e18 + this should be 100000e18 or 1000000e18 at launch at least.
             vm.stopBroadcast();
         }
     }

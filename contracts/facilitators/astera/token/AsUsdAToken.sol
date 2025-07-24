@@ -11,24 +11,24 @@ import {VersionedInitializable} from
     "lib/astera/contracts/protocol/libraries/upgradeability/VersionedInitializable.sol";
 import {IncentivizedERC20} from
     "lib/astera/contracts/protocol/tokenization/ERC20/IncentivizedERC20.sol";
-import {ICdxUSD} from "contracts/interfaces/ICdxUSD.sol";
-import {ICdxUsdAToken} from "contracts/interfaces/ICdxUsdAToken.sol";
-import {ICdxUSDFacilitators} from "contracts/interfaces/ICdxUSDFacilitators.sol";
+import {IAsUSD} from "contracts/interfaces/IAsUSD.sol";
+import {IAsUsdAToken} from "contracts/interfaces/IAsUsdAToken.sol";
+import {IAsUSDFacilitators} from "contracts/interfaces/IAsUSDFacilitators.sol";
 import {IERC20} from "lib/astera/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
-import {CdxUsdVariableDebtToken} from "./CdxUsdVariableDebtToken.sol";
+import {AsUsdVariableDebtToken} from "./AsUsdVariableDebtToken.sol";
 import {IRollingRewarder} from "contracts/interfaces/IRollingRewarder.sol";
 
 /**
- * @title CdxUSD A ERC20 AToken
+ * @title AsUSD A ERC20 AToken
  * @notice Implementation of the interest bearing token for the Astera protocol.
  * @author Conclave - Beirao
- * @dev This contract represents the interest-bearing version of CdxUSD in the Astera protocol.
+ * @dev This contract represents the interest-bearing version of AsUSD in the Astera protocol.
  * It tracks user deposits and accrues interest over time.
  */
-contract CdxUsdAToken is
+contract AsUsdAToken is
     IncentivizedERC20("ATOKEN_IMPL", "ATOKEN_IMPL", 0),
     VersionedInitializable,
-    ICdxUsdAToken
+    IAsUsdAToken
 {
     using WadRayMath for uint256;
 
@@ -42,7 +42,7 @@ contract CdxUsdAToken is
     ILendingPool internal _pool;
 
     /// @dev Associated variable debt token tracking borrowed amounts.
-    CdxUsdVariableDebtToken internal _cdxUsdVariableDebtToken;
+    AsUsdVariableDebtToken internal _asUsdVariableDebtToken;
 
     /// @dev Privileged address that can perform maintenance operations.
     address internal _keeper;
@@ -50,7 +50,7 @@ contract CdxUsdAToken is
     /// @dev Address receiving protocol fees.
     address internal _treasury;
 
-    /// @dev The CdxUSD token this aToken represents.
+    /// @dev The AsUSD token this aToken represents.
     address internal _underlyingAsset;
 
     /// @dev Indicates reserve type configuration.
@@ -59,8 +59,8 @@ contract CdxUsdAToken is
     /// @dev Manages distribution of protocol incentives.
     IRewarder internal _incentivesController;
 
-    /// @dev Manages CdxUSD rewards in the Reliquary system.
-    IRollingRewarder public _reliquaryCdxusdRewarder;
+    /// @dev Manages AsUSD rewards in the Reliquary system.
+    IRollingRewarder public _reliquaryAsusdRewarder;
 
     /// @dev Percentage of fees allocated to Reliquary, in basis points.
     uint256 public _reliquaryAllocation;
@@ -96,7 +96,7 @@ contract CdxUsdAToken is
      * @dev Must call setVariableDebtToken(), setReliquaryInfo(), and setKeeper() after init.
      * @param pool The lending pool contract address.
      * @param treasury Address receiving protocol fees.
-     * @param underlyingAsset The CdxUSD token address.
+     * @param underlyingAsset The AsUSD token address.
      * @param incentivesController Contract managing reward distributions.
      * @param aTokenDecimals Decimal places, matching underlying asset.
      * @param aTokenName Token name.
@@ -138,38 +138,38 @@ contract CdxUsdAToken is
         );
     }
 
-    /// @inheritdoc ICdxUsdAToken
-    function setVariableDebtToken(address cdxUsdVariableDebtToken)
+    /// @inheritdoc IAsUsdAToken
+    function setVariableDebtToken(address asUsdVariableDebtToken)
         external
         override
         onlyPoolAdmin
     {
-        require(address(_cdxUsdVariableDebtToken) == address(0), Errors.AT_DEBT_TOKEN_ALREADY_SET);
-        require(cdxUsdVariableDebtToken != address(0), Errors.VL_INVALID_INPUT);
+        require(address(_asUsdVariableDebtToken) == address(0), Errors.AT_DEBT_TOKEN_ALREADY_SET);
+        require(asUsdVariableDebtToken != address(0), Errors.VL_INVALID_INPUT);
 
-        _cdxUsdVariableDebtToken = CdxUsdVariableDebtToken(cdxUsdVariableDebtToken);
+        _asUsdVariableDebtToken = AsUsdVariableDebtToken(asUsdVariableDebtToken);
 
-        emit SetVariableDebtToken(cdxUsdVariableDebtToken);
+        emit SetVariableDebtToken(asUsdVariableDebtToken);
     }
 
-    /// @inheritdoc ICdxUsdAToken
-    function setReliquaryInfo(address reliquaryCdxusdRewarder, uint256 reliquaryAllocation)
+    /// @inheritdoc IAsUsdAToken
+    function setReliquaryInfo(address reliquaryAsusdRewarder, uint256 reliquaryAllocation)
         external
         override
         onlyPoolAdmin
     {
-        require(reliquaryCdxusdRewarder != address(0), Errors.VL_INVALID_INPUT);
+        require(reliquaryAsusdRewarder != address(0), Errors.VL_INVALID_INPUT);
         require(reliquaryAllocation <= BPS, Errors.AT_RELIQUARY_ALLOCATION_MORE_THAN_100);
 
-        _reliquaryCdxusdRewarder = IRollingRewarder(reliquaryCdxusdRewarder);
+        _reliquaryAsusdRewarder = IRollingRewarder(reliquaryAsusdRewarder);
         _reliquaryAllocation = reliquaryAllocation;
 
-        IERC20(_underlyingAsset).approve(reliquaryCdxusdRewarder, type(uint256).max);
+        IERC20(_underlyingAsset).approve(reliquaryAsusdRewarder, type(uint256).max);
 
-        emit SetReliquaryInfo(reliquaryCdxusdRewarder, reliquaryAllocation);
+        emit SetReliquaryInfo(reliquaryAsusdRewarder, reliquaryAllocation);
     }
 
-    /// @inheritdoc ICdxUsdAToken
+    /// @inheritdoc IAsUsdAToken
     function setKeeper(address keeper) external override onlyPoolAdmin {
         require(keeper != address(0), Errors.VL_INVALID_INPUT);
         _keeper = keeper;
@@ -273,7 +273,7 @@ contract CdxUsdAToken is
 
     /**
      * @notice Gets underlying asset address.
-     * @dev Returns CdxUSD token address.
+     * @dev Returns AsUSD token address.
      * @return The underlying asset address.
      */
     function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
@@ -338,7 +338,7 @@ contract CdxUsdAToken is
         onlyLendingPool
         returns (uint256)
     {
-        ICdxUSD(_underlyingAsset).mint(target, amount);
+        IAsUSD(_underlyingAsset).mint(target, amount);
         return amount;
     }
 
@@ -354,12 +354,12 @@ contract CdxUsdAToken is
         override
         onlyLendingPool
     {
-        uint256 balanceFromInterest = _cdxUsdVariableDebtToken.getBalanceFromInterest(onBehalfOf);
+        uint256 balanceFromInterest = _asUsdVariableDebtToken.getBalanceFromInterest(onBehalfOf);
         if (amount <= balanceFromInterest) {
-            _cdxUsdVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, amount);
+            _asUsdVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, amount);
         } else {
-            _cdxUsdVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, balanceFromInterest);
-            ICdxUSD(_underlyingAsset).burn(amount - balanceFromInterest);
+            _asUsdVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, balanceFromInterest);
+            IAsUSD(_underlyingAsset).burn(amount - balanceFromInterest);
         }
     }
 
@@ -419,17 +419,17 @@ contract CdxUsdAToken is
         return ATOKEN_REVISION;
     }
 
-    /// @inheritdoc ICdxUsdAToken
+    /// @inheritdoc IAsUsdAToken
     function getVariableDebtToken() external view override returns (address) {
-        return address(_cdxUsdVariableDebtToken);
+        return address(_asUsdVariableDebtToken);
     }
 
-    /// @inheritdoc ICdxUSDFacilitators
+    /// @inheritdoc IAsUSDFacilitators
     function distributeFeesToTreasury() external virtual override onlyKeeper {
         require(_treasury != address(0), Errors.AT_TREASURY_NOT_SET);
         uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
 
-        _reliquaryCdxusdRewarder.fund(_reliquaryAllocation * balance / BPS);
+        _reliquaryAsusdRewarder.fund(_reliquaryAllocation * balance / BPS);
 
         IERC20(_underlyingAsset).transfer(
             _treasury, IERC20(_underlyingAsset).balanceOf(address(this))

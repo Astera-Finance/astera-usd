@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "../DeploymentConstants.sol";
-import "contracts/tokens/CdxUSD.sol";
+import "contracts/tokens/AsUSD.sol";
 
 // OApp imports
 import {
@@ -17,7 +17,7 @@ import {
     MessagingFee, MessagingReceipt
 } from "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFTCore.sol";
 
-contract CdxUsdBridge is Script, DeploymentConstants {
+contract AsUsdBridge is Script, DeploymentConstants {
     using OptionsBuilder for bytes;
 
     function setUp() public {}
@@ -30,7 +30,7 @@ contract CdxUsdBridge is Script, DeploymentConstants {
         // Start broadcasting with the private key
         vm.startBroadcast();
 
-        CdxUSD sourceOFT = CdxUSD(cdxUsd);
+        AsUSD sourceOFT = AsUSD(asUsd);
 
         bytes memory _extraOptions =
             OptionsBuilder.newOptions().addExecutorLzReceiveOption(65000, 0);

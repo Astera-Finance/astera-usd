@@ -19,19 +19,19 @@ import {IVault as IBalancerVault} from
 import {BalancerV3Router} from "./libraries/BalancerV3Router.sol";
 
 /**
- * @title ScdxUsdVaultStrategy Contract.
+ * @title SasUsdVaultStrategy Contract.
  * @author Conclave - Beirao.
- * @notice This contract is a Astera Vault strategy that defines the Staked cdxUSD logic.
+ * @notice This contract is a Astera Vault strategy that defines the Staked asUSD logic.
  * @dev Keepers need to call `setMinBPTAmountOut()` + `harvest()` every day.
  */
-contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
+contract SasUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
     /// @dev ID of the relic used by this strategy.
     uint256 private constant RELIC_ID = 1;
     /// @dev Number of tokens in the Balancer pool.
     uint256 private constant NB_BALANCER_POOL_ASSET = 2;
 
-    /// @dev Reference to the cdxUSD token contract.
-    IERC20 public cdxUSD;
+    /// @dev Reference to the asUSD token contract.
+    IERC20 public asUSD;
     /// @dev Reference to the Reliquary staking contract.
     IReliquary public reliquary;
     /// @dev Reference to the Balancer vault contract.
@@ -41,25 +41,25 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
 
     /// @dev Address of the Balancer pool.
     address public balancerPool;
-    /// @dev Index of cdxUSD in the pool tokens array.
-    uint256 public cdxUsdIndex;
+    /// @dev Index of asUSD in the pool tokens array.
+    uint256 public asUsdIndex;
     /// @dev Minimum BPT tokens to receive when joining pool, used for slippage protection.
     uint256 public minBPTAmountOut;
 
     /// @dev Thrown when input parameters are invalid.
-    error ScdxUsdVaultStrategy__INVALID_INPUT();
+    error SasUsdVaultStrategy__INVALID_INPUT();
     /// @dev Thrown when funds are still staked in Reliquary.
-    error ScdxUsdVaultStrategy__FUND_STILL_IN_RELIQUARY();
+    error SasUsdVaultStrategy__FUND_STILL_IN_RELIQUARY();
     /// @dev Thrown when token addresses are in wrong order.
-    error ScdxUsdVaultStrategy__ADDRESS_WRONG_ORDER();
+    error SasUsdVaultStrategy__ADDRESS_WRONG_ORDER();
     /// @dev Thrown when strategy does not own relic ID 1.
-    error ScdxUsdVaultStrategy__SHOULD_OWN_RELIC_1();
-    /// @dev Thrown when cdxUSD is not in Balancer pool.
-    error ScdxUsdVaultStrategy__CDXUSD_NOT_INCLUDED_IN_BALANCER_POOL();
+    error SasUsdVaultStrategy__SHOULD_OWN_RELIC_1();
+    /// @dev Thrown when asUSD is not in Balancer pool.
+    error SasUsdVaultStrategy__ASUSD_NOT_INCLUDED_IN_BALANCER_POOL();
     /// @dev Thrown when minBPTAmountOut is not set.
-    error ScdxUsdVaultStrategy__NO_SLIPPAGE_PROTECTION();
+    error SasUsdVaultStrategy__NO_SLIPPAGE_PROTECTION();
     /// @dev Thrown when pool has more than one counter asset.
-    error ScdxUsdVaultStrategy__MORE_THAN_1_COUNTER_ASSET();
+    error SasUsdVaultStrategy__MORE_THAN_1_COUNTER_ASSET();
 
     /**
      * @dev Initializes the strategy with core parameters and permissions.
@@ -69,7 +69,7 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
      * @param _strategists Array of strategist addresses.
      * @param _multisigRoles Array of multisig role addresses.
      * @param _keepers Array of keeper addresses.
-     * @param _cdxUSD Address of the cdxUSD token.
+     * @param _asUSD Address of the asUSD token.
      * @param _reliquary Address of the Reliquary staking contract.
      * @param _balancerPool Address of the Balancer pool.
      */
@@ -80,17 +80,17 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
         address[] memory _strategists,
         address[] memory _multisigRoles,
         address[] memory _keepers,
-        address _cdxUSD,
+        address _asUSD,
         address _reliquary,
         address _balancerPool
     ) public initializer {
         if (
             _code3xVault == address(0) || _reliquary == address(0) || _strategists.length == 0
                 || _multisigRoles.length != 3
-        ) revert ScdxUsdVaultStrategy__INVALID_INPUT();
+        ) revert SasUsdVaultStrategy__INVALID_INPUT();
 
         if (!IReliquary(_reliquary).isApprovedOrOwner(address(this), RELIC_ID)) {
-            revert ScdxUsdVaultStrategy__SHOULD_OWN_RELIC_1();
+            revert SasUsdVaultStrategy__SHOULD_OWN_RELIC_1();
         }
 
         address poolToken_ = IReliquary(_reliquary).getPoolInfo(
@@ -106,31 +106,31 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
             _keepers
         );
 
-        cdxUSD = IERC20(_cdxUSD);
+        asUSD = IERC20(_asUSD);
         balancerVault = IBalancerVault(_balancerVault);
         IERC20(poolToken_).approve(_reliquary, type(uint256).max);
 
         reliquary = IReliquary(_reliquary);
         minBPTAmountOut = 1;
-        cdxUsdIndex = type(uint256).max;
+        asUsdIndex = type(uint256).max;
         balancerPool = _balancerPool;
         balancerV3Router = BalancerV3Router(_balancerV3Router);
 
         IERC20[] memory poolTokens_ = IBalancerVault(_balancerVault).getPoolTokens(_balancerPool);
         if (poolTokens_.length != NB_BALANCER_POOL_ASSET) {
-            revert ScdxUsdVaultStrategy__MORE_THAN_1_COUNTER_ASSET();
+            revert SasUsdVaultStrategy__MORE_THAN_1_COUNTER_ASSET();
         }
 
-        IERC20(_cdxUSD).approve(_balancerV3Router, type(uint256).max);
+        IERC20(_asUSD).approve(_balancerV3Router, type(uint256).max);
 
         for (uint256 i = 0; i < NB_BALANCER_POOL_ASSET; i++) {
-            if (cdxUSD == poolTokens_[i]) {
-                cdxUsdIndex = i;
+            if (asUSD == poolTokens_[i]) {
+                asUsdIndex = i;
             }
         }
 
-        if (cdxUsdIndex == type(uint256).max) {
-            revert ScdxUsdVaultStrategy__CDXUSD_NOT_INCLUDED_IN_BALANCER_POOL();
+        if (asUsdIndex == type(uint256).max) {
+            revert SasUsdVaultStrategy__ASUSD_NOT_INCLUDED_IN_BALANCER_POOL();
         }
     }
 
@@ -143,11 +143,11 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
     function setReliquary(address _reliquary) public {
         _atLeastRole(ADMIN);
         if (_reliquary == address(0)) {
-            revert ScdxUsdVaultStrategy__INVALID_INPUT();
+            revert SasUsdVaultStrategy__INVALID_INPUT();
         }
 
         if (balanceOfPool() != 0) {
-            revert ScdxUsdVaultStrategy__FUND_STILL_IN_RELIQUARY();
+            revert SasUsdVaultStrategy__FUND_STILL_IN_RELIQUARY();
         }
 
         reliquary = IReliquary(_reliquary);
@@ -209,14 +209,14 @@ contract ScdxUsdVaultStrategy is ReaperBaseStrategyv4, IERC721Receiver {
      * @dev Keepers must call setMinBPTAmountOut() before harvest.
      */
     function _harvestCore() internal override {
-        if (minBPTAmountOut <= 1) revert ScdxUsdVaultStrategy__NO_SLIPPAGE_PROTECTION();
+        if (minBPTAmountOut <= 1) revert SasUsdVaultStrategy__NO_SLIPPAGE_PROTECTION();
 
         reliquary.update(RELIC_ID, address(this));
 
-        uint256 balanceCdxUSD = cdxUSD.balanceOf(address(this));
-        if (balanceCdxUSD != 0) {
+        uint256 balanceAsUSD = asUSD.balanceOf(address(this));
+        if (balanceAsUSD != 0) {
             uint256[] memory amountsToAdd_ = new uint256[](NB_BALANCER_POOL_ASSET);
-            amountsToAdd_[cdxUsdIndex] = balanceCdxUSD;
+            amountsToAdd_[asUsdIndex] = balanceAsUSD;
 
             balancerV3Router.addLiquidityUnbalanced(balancerPool, amountsToAdd_, minBPTAmountOut);
         }

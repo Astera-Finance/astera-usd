@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title ICdxUSDFacilitators
+ * @title IAsUSDFacilitators
  * @author Conclave - Beirao
- * @notice Defines the behavior of a CdxUSD Facilitator
+ * @notice Defines the behavior of a AsUSD Facilitator
  */
-interface ICdxUSDFacilitators {
+interface IAsUSDFacilitators {
     /// Events
     event FeesDistributedToTreasury(
         address indexed treasury, address indexed asset, uint256 amount

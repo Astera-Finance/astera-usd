@@ -30,16 +30,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IAggregatorV3Interface} from "contracts/interfaces/IAggregatorV3Interface.sol";
 
 /**
- * @title CdxUsdIInterestRateStrategy contract.
+ * @title AsUsdIInterestRateStrategy contract.
  * @notice Implements interest rate calculations using control theory.
  * @dev The model uses Proportional Integrator (PI) control theory. Admin sets optimal utilization
  * rate and strategy auto-adjusts interest rate via Ki variable. Controller error calculated from
  * Balancer stable swap balance incentivized by sdcxUSD staking module.
  * @dev See: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4844212.
- * @dev IMPORTANT: Do not use as library. One CdxUsdIInterestRateStrategy per market only.
+ * @dev IMPORTANT: Do not use as library. One AsUsdIInterestRateStrategy per market only.
  * @author Conclave - Beirao.
  */
-contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
+contract AsUsdIInterestRateStrategy is IReserveInterestRateStrategy {
     using WadRayMath for uint256;
     using WadRayMath for int256;
     using PercentageMath for uint256;
@@ -51,7 +51,7 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
 
     /// @dev Reference to the lending pool addresses provider contract.
     ILendingPoolAddressesProvider public immutable _addressesProvider;
-    /// @dev Address of the asset (cdxUSD) this strategy is associated with.
+    /// @dev Address of the asset (asUSD) this strategy is associated with.
     address public immutable _asset;
     /// @dev Type of reserve this strategy manages.
     bool public immutable _assetReserveType;
@@ -110,7 +110,7 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
      * @notice Initializes the interest rate strategy contract.
      * @dev Counter asset MUST be 1$ pegged. setOracleValues() needed at contract creation.
      * @param provider Address of LendingPoolAddressesProvider contract.
-     * @param asset Address of cdxUSD token.
+     * @param asset Address of asUSD token.
      * @param balancerVault Address of Balancer Vault contract.
      * @param balancerPool Address of the Balancer pool.
      * @param minControllerError Minimum error threshold for PID controller.
@@ -119,7 +119,7 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
      */
     constructor(
         address provider,
-        address asset, // cdxUSD
+        address asset, // asUSD
         bool,
         address balancerVault,
         address balancerPool,
@@ -146,7 +146,7 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
         _optimalStablePoolReserveUtilization = uint256(RAY) / poolTokens_.length;
 
         /// Checks.
-        // 2 tokens [asset (cdxUSD), counterAsset (USDC/USDT)].
+        // 2 tokens [asset (asUSD), counterAsset (USDC/USDT)].
         if (poolTokens_.length != 2) {
             revert(Errors.VL_INVALID_INPUT);
         }
@@ -307,8 +307,8 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
         int256 err;
 
         if (address(_counterAssetPriceFeed) == address(0) || isCounterAssetPegged()) {
-            /// Calculate the cdxUSD stablePool reserve utilization.
-            stablePoolReserveUtilization = getCdxUsdStablePoolReserveUtilization();
+            /// Calculate the asUSD stablePool reserve utilization.
+            stablePoolReserveUtilization = getAsUsdStablePoolReserveUtilization();
 
             /// PID state update.
             err = getNormalizedError(stablePoolReserveUtilization);
@@ -360,12 +360,12 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
 
     // ----------- helpers -----------
     /**
-     * @notice Calculates the cdxUSD balance share in the Balancer Pool.
-     * @return Share (in RAY) of the cdxUSD balance.
+     * @notice Calculates the asUSD balance share in the Balancer Pool.
+     * @return Share (in RAY) of the asUSD balance.
      */
-    function getCdxUsdStablePoolReserveUtilization() public view returns (uint256) {
+    function getAsUsdStablePoolReserveUtilization() public view returns (uint256) {
         uint256 totalInPool_;
-        uint256 cdxUsdAmtInPool_;
+        uint256 asUsdAmtInPool_;
 
         (IERC20[] memory tokens_,,, uint256[] memory lastBalancesLiveScaled18_) =
             _balancerVault.getPoolTokenInfo(_balancerPool);
@@ -374,10 +374,10 @@ contract CdxUsdIInterestRateStrategy is IReserveInterestRateStrategy {
             uint256 lastBalance_ = lastBalancesLiveScaled18_[i];
             totalInPool_ += lastBalance_;
 
-            if (address(tokens_[i]) == _asset) cdxUsdAmtInPool_ = lastBalance_;
+            if (address(tokens_[i]) == _asset) asUsdAmtInPool_ = lastBalance_;
         }
 
-        return cdxUsdAmtInPool_ * uint256(RAY) / totalInPool_;
+        return asUsdAmtInPool_ * uint256(RAY) / totalInPool_;
     }
 
     /**
