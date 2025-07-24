@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
-import "./DeploymentConstants.s.sol";
+import "./Constants.sol";
 import "contracts/tokens/CdxUSD.sol";
 
-contract CdxUsdGetBytecode is Script, DeploymentConstants {
+contract CdxUsdGetBytecode is Script, Constants {
     string public name = "Cod3x USD";
     string public symbol = "cdxUSD";
     address public delegate = admin; // testnet address

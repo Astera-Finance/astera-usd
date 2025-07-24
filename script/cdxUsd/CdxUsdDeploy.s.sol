@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import {Script, console2} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "lib/createx/src/CreateX.sol";
-import "../DeploymentConstants.s.sol";
+import "../Constants.sol";
 import "contracts/tokens/CdxUSD.sol";
 
-contract CdxUsdDeploy is Script, DeploymentConstants {
+contract CdxUsdDeploy is Script, Constants {
     string public name = "Cod3x USD";
     string public symbol = "cdxUSD";
     address public delegate = timelock; // testnet address
@@ -21,7 +21,7 @@ contract CdxUsdDeploy is Script, DeploymentConstants {
         bytes memory cachedInitCode = abi.encodePacked(type(CdxUSD).creationCode, args);
 
         vm.broadcast();
-        address l = CreateX(createx).deployCreate3{value: 0}(
+        address l = createx.deployCreate3{value: 0}(
             bytes32(0x3d0c000adf317206fa4a3201a8f8c926ef394fad0047c74b092069a800a5ed54),
             cachedInitCode
         );

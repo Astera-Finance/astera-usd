@@ -37,7 +37,7 @@ contract TRouter is Constants {
         returns (uint256 bptAmountOut)
     {
         return abi.decode(
-            Vault(balancerContracts.balVault).unlock(
+            Vault(vaultV3).unlock(
                 abi.encodeCall(
                     this.initializeHook, (msg.sender, pool, tokens, amounts, 0, bytes(""))
                 )
@@ -54,7 +54,7 @@ contract TRouter is Constants {
         uint256 minBptAmountOut,
         bytes memory userData
     ) public returns (uint256 bptAmountOut) {
-        bptAmountOut = IVaultExtension(balancerContracts.balVault).initialize(
+        bptAmountOut = IVaultExtension(vaultV3).initialize(
             pool, sender, tokens, amounts, minBptAmountOut, userData
         );
 
@@ -74,9 +74,7 @@ contract TRouter is Constants {
         addLiquidityParams.userData = bytes("");
 
         (amountsIn, bptAmountOut,) = abi.decode(
-            Vault(balancerContracts.balVault).unlock(
-                abi.encodeCall(this.addLiquidityHook, addLiquidityParams)
-            ),
+            Vault(vaultV3).unlock(abi.encodeCall(this.addLiquidityHook, addLiquidityParams)),
             (uint256[], uint256, bytes)
         );
     }
@@ -85,8 +83,7 @@ contract TRouter is Constants {
         public
         returns (uint256[] memory amountsIn, uint256 bptAmountOut, bytes memory returnData)
     {
-        (amountsIn, bptAmountOut, returnData) =
-            Vault(balancerContracts.balVault).addLiquidity(params);
+        (amountsIn, bptAmountOut, returnData) = Vault(vaultV3).addLiquidity(params);
 
         _settle(params.to, params.pool, params.maxAmountsIn);
     }
@@ -104,9 +101,7 @@ contract TRouter is Constants {
         removeLiquidityParams.userData = bytes("");
 
         (, amountsOut,) = abi.decode(
-            Vault(balancerContracts.balVault).unlock(
-                abi.encodeCall(this.removeLiquidityHook, removeLiquidityParams)
-            ),
+            Vault(vaultV3).unlock(abi.encodeCall(this.removeLiquidityHook, removeLiquidityParams)),
             (uint256, uint256[], bytes)
         );
     }
@@ -115,11 +110,10 @@ contract TRouter is Constants {
         public
         returns (uint256 bptAmountIn, uint256[] memory amountsOut, bytes memory returnData)
     {
-        (bptAmountIn, amountsOut, returnData) =
-            Vault(balancerContracts.balVault).removeLiquidity(params);
+        (bptAmountIn, amountsOut, returnData) = Vault(vaultV3).removeLiquidity(params);
 
         // minAmountsOut length is checked against tokens length at the Vault.
-        IERC20[] memory tokens = IVault(balancerContracts.balVault).getPoolTokens(params.pool);
+        IERC20[] memory tokens = IVault(vaultV3).getPoolTokens(params.pool);
 
         for (uint256 i = 0; i < tokens.length; ++i) {
             uint256 amountOut = amountsOut[i];
@@ -130,7 +124,7 @@ contract TRouter is Constants {
             IERC20 token = tokens[i];
 
             // Transfer the token to the sender (amountOut).
-            IVault(balancerContracts.balVault).sendTo(token, params.from, amountOut);
+            IVault(vaultV3).sendTo(token, params.from, amountOut);
         }
     }
 
@@ -142,7 +136,7 @@ contract TRouter is Constants {
         uint256 minAmountOut
     ) external returns (uint256) {
         return abi.decode(
-            Vault(balancerContracts.balVault).unlock(
+            Vault(vaultV3).unlock(
                 abi.encodeCall(
                     this.swapSingleTokenHook,
                     (
@@ -182,11 +176,11 @@ contract TRouter is Constants {
         });
 
         (uint256 amountCalculated, uint256 amountIn, uint256 amountOut) =
-            Vault(balancerContracts.balVault).swap(swapParams);
+            Vault(vaultV3).swap(swapParams);
 
-        IVault(balancerContracts.balVault).sendTo(tokenOut, sender, amountOut);
-        tokenIn.transferFrom(sender, address(balancerContracts.balVault), amountIn);
-        Vault(balancerContracts.balVault).settle(tokenIn, amountIn);
+        IVault(vaultV3).sendTo(tokenOut, sender, amountOut);
+        tokenIn.transferFrom(sender, address(vaultV3), amountIn);
+        Vault(vaultV3).settle(tokenIn, amountIn);
 
         return amountCalculated;
     }
@@ -194,7 +188,7 @@ contract TRouter is Constants {
     // ========== Internal Functions ==========
 
     function _settle(address sender, address pool, uint256[] memory amounts) internal {
-        IERC20[] memory tokens = IVault(balancerContracts.balVault).getPoolTokens(pool);
+        IERC20[] memory tokens = IVault(vaultV3).getPoolTokens(pool);
 
         for (uint256 i = 0; i < tokens.length; ++i) {
             IERC20 token = tokens[i];
@@ -204,8 +198,8 @@ contract TRouter is Constants {
                 continue;
             }
 
-            token.transferFrom(sender, address(balancerContracts.balVault), amount);
-            Vault(balancerContracts.balVault).settle(token, amount);
+            token.transferFrom(sender, address(vaultV3), amount);
+            Vault(vaultV3).settle(token, amount);
         }
     }
 
