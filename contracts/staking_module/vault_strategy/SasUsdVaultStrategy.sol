@@ -2,8 +2,8 @@
 pragma solidity ^0.8.22;
 
 /// Astera Vault imports
-import "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
-import "lib/Astera-Vault/lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
+import "lib/astera-vault/src/ReaperBaseStrategyv4.sol";
+import "lib/astera-vault/lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 /// Reliquary imports
 import "contracts/interfaces/IReliquary.sol";

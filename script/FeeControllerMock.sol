@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IFeeController} from "lib/Astera-Vault/src/interfaces/IFeeController.sol";
+import {IFeeController} from "lib/astera-vault/src/interfaces/IFeeController.sol";
 
 contract FeeControllerMock is IFeeController {
     uint16 public managementFeeBPS;

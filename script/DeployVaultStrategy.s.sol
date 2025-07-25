@@ -6,10 +6,9 @@ import {DeploymentConstants} from "./DeploymentConstants.sol";
 import {FeeControllerMock} from "./FeeControllerMock.sol";
 import {BalancerV3Router} from
     "contracts/staking_module/vault_strategy/libraries/BalancerV3Router.sol";
-import {IFeeController} from "lib/Astera-Vault/src/interfaces/IFeeController.sol";
-import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {SasUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
+import {IFeeController} from "lib/astera-vault/src/interfaces/IFeeController.sol";
+import {ReaperVaultV2} from "lib/astera-vault/src/ReaperVaultV2.sol";
+import {SasUsdVaultStrategy} from "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Reliquary} from "contracts/staking_module/reliquary/Reliquary.sol";
 

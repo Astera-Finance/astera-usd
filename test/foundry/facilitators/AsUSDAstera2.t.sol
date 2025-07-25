@@ -28,12 +28,11 @@ import "contracts/interfaces/ICurves.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 // vault
-import {ReaperBaseStrategyv4} from "lib/Astera-Vault/src/ReaperBaseStrategyv4.sol";
-import {ReaperVaultV2} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {SasUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
+import {ReaperBaseStrategyv4} from "lib/astera-vault/src/ReaperBaseStrategyv4.sol";
+import {ReaperVaultV2} from "lib/astera-vault/src/ReaperVaultV2.sol";
+import {SasUsdVaultStrategy} from "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "lib/Astera-Vault/test/vault/mock/FeeControllerMock.sol";
+import "lib/astera-vault/test/vault/mock/FeeControllerMock.sol";
 
 // AsUSD
 import {AsUSD} from "contracts/tokens/AsUSD.sol";

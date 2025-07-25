@@ -5,9 +5,8 @@ pragma solidity ^0.8.22;
 import "contracts/interfaces/IReliquary.sol";
 
 /// Astera imports
-import {ReaperVaultV2 as AsteraVault} from "lib/Astera-Vault/src/ReaperVaultV2.sol";
-import {SasUsdVaultStrategy} from
-    "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
+import {ReaperVaultV2 as AsteraVault} from "lib/astera-vault/src/ReaperVaultV2.sol";
+import {SasUsdVaultStrategy} from "contracts/staking_module/vault_strategy/SasUsdVaultStrategy.sol";
 
 // Balancer imports
 import {IVault as IBalancerVault} from
@@ -206,12 +205,10 @@ contract Zap is Pausable, Ownable {
      * @param _minSasUsdOut slippage protection.
      * @param _to address receiving sasUSD.
      */
-    function zapInStakedAsUSD(
-        uint256 _asUsdAmt,
-        uint256 _caAmt,
-        address _to,
-        uint256 _minSasUsdOut
-    ) external whenNotPaused {
+    function zapInStakedAsUSD(uint256 _asUsdAmt, uint256 _caAmt, address _to, uint256 _minSasUsdOut)
+        external
+        whenNotPaused
+    {
         if (_asUsdAmt == 0 && _caAmt == 0 || _minSasUsdOut == 0 || _to == address(0)) {
             revert Zap__WRONG_INPUT();
         }
