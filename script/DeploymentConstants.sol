@@ -48,6 +48,14 @@ contract DeploymentConstants {
     address public constant multisignGuardian = 0x0D1d0f89cb988678B37FD5b5c6C1A5bBdc55f8ba; // 1/X
     address public constant emissionRate = 0x0D1d0f89cb988678B37FD5b5c6C1A5bBdc55f8ba; // ??? TBD
     address public constant keeper = 0xF29dA3595351dBFd0D647857C46F8D63Fc2e68C5; // TBD
+    // address public constant createx = 0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed; // all chains
+    // address public constant asUsd = 0xa500000000e482752f032eA387390b6025a2377b; //0x21E200A8576daCC89e5cd96cdffaE9C105Bd0407 -> veified; //deployed with me as a owner // 0xC0D3700000987C99b3C9009069E4f8413fD22330; // add constant
+    // // address public constant deployer = 0xF29dA3595351dBFd0D647857C46F8D63Fc2e68C5;
+    // address public constant timelock = 0xc0D3700924301AC384E5Eae3272E08220752DE3D;
+    // address public constant multisignAdmin = 0x7D66a2e916d79c0988D41F1E50a1429074ec53a4; // 3/X
+    // address public constant multisignGuardian = 0xDa77d6C0281fCb3e41BD966aC393502a1C524224; // 1/X
+    // address public constant emissionRate = 0x0D1d0f89cb988678B37FD5b5c6C1A5bBdc55f8ba; // ??? TBD
+    // address public constant keeper = 0xF1D6ab29d12cF2bee25A195579F544BFcC3dD78f; // TBD
 
     /// specific chains
     //// Astera
@@ -68,6 +76,16 @@ contract DeploymentConstants {
     address public constant BASE_MINI_POOL_ADDRESSES_PROVIDER =
         0x5caB34F15b0a3d945FDaf21Cfd4F883BBF844b59;
     address public constant BASE_ORACLE = 0xe0413f5Feeb5EA370AbD6095DDf14D84871139Ab;
+
+    // LINEA
+    address public constant LINEA_TREASURY = 0xfEfcb2fb19b9A70B30646Fdc1A0860Eb12F7ff8b; // tmp
+    address public constant LINEA_REWARDER = address(0);
+    address public constant LINEA_LENDING_POOL = 0x360996dA4E66f6282a142c8F86120F1adFf8Dd26;
+    address public constant LINEA_LENDING_POOL_ADDRESSES_PROVIDER =
+        0xcc254E7f33B2f4b3534278DF237d21b4b71b444e;
+    address public constant LINEA_MINI_POOL_ADDRESSES_PROVIDER =
+        0x5caB34F15b0a3d945FDaf21Cfd4F883BBF844b59;
+    address public constant LINEA_ORACLE = 0xe0413f5Feeb5EA370AbD6095DDf14D84871139Ab;
 
     // balancer V3
     ///ETH

@@ -19,8 +19,13 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
     string constant VAULT_SYMBOL = "sasUsd";
     uint256 constant RELIC_ID = 1;
 
-    address constant STABLE_POOL = address(1); // fill with deployed stable pool
-    address constant RELIQUARY = address(2);
+    address STABLE_POOL = address(1); // fill with deployed stable pool
+    address RELIQUARY = address(2);
+
+    function initStablePoolAndReliquary(address _stablePool, address _reliquary) public {
+        STABLE_POOL = _stablePool;
+        RELIQUARY = _reliquary;
+    }
 
     function run() public returns (address, address, address) {
         /// ========== sasUsd Vault Strategy Deploy ===========
@@ -46,8 +51,6 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
 
             address[] memory ownerArr1 = new address[](1); // @audit  remove this useless array.
             ownerArr[0] = deployer;
-
-            IFeeController(FEE_CONTROLLER).updateManagementFeeBPS(0); // @audit you can remove this with the implementation in the gist.
 
             ReaperVaultV2 asteraVault = new ReaperVaultV2(
                 STABLE_POOL,

@@ -14,16 +14,19 @@ import {ICurves} from "contracts/interfaces/ICurves.sol";
 
 import {console2} from "forge-std/console2.sol";
 
-contract DeployBalancerPool is Script, DeploymentFixtures {
+contract DeployReliquary is Script, DeploymentFixtures {
     uint256 constant SLOPE = 100;
     uint256 constant MIN_MULTIPLIER = 365 days * 100;
     uint256 constant PLATEAU = 10 days;
-
     string constant RELIQUARY_NAME = "Reliquary sasUsd";
     string constant RELIQUARY_SYMBOL = "sasUsd Relic";
     string constant RELIQUARY_POOL_NAME = "sasUsd Pool";
 
-    address constant STABLE_POOL = address(1); // fill with real stable pool !!
+    address STABLE_POOL = address(1); // fill with real stable pool !!
+
+    function initStablePool(address _stablePool) public {
+        STABLE_POOL = _stablePool;
+    }
 
     /// ========= Reliquary Deploy =========
     function run() public returns (address, address, address, address, address) {

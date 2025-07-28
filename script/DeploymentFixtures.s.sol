@@ -165,7 +165,7 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             incentivesController: _extContractsForConfiguration.rewarder,
             underlyingAssetName: tmpSymbol,
             aTokenName: string.concat("Astera ", tmpSymbol),
-            aTokenSymbol: string.concat("cl", tmpSymbol),
+            aTokenSymbol: string.concat("as", tmpSymbol),
             variableDebtTokenName: string.concat("Astera variable debt bearing ", tmpSymbol),
             variableDebtTokenSymbol: string.concat("variableDebt", tmpSymbol),
             params: "0x10"
