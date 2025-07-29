@@ -152,6 +152,14 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         ILendingPoolConfigurator.InitReserveInput[] memory initInputParams =
             new ILendingPoolConfigurator.InitReserveInput[](1);
 
+        address lendingPool = ILendingPoolAddressesProvider(
+            _extContractsForConfiguration.lendingPoolAddressesProvider
+        ).getLendingPool();
+        if (ILendingPool(lendingPool).paused()) {
+            ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
+                .setPoolPause(false);
+        }
+
         string memory tmpSymbol = ERC20(_asUsd).symbol();
 
         initInputParams[0] = ILendingPoolConfigurator.InitReserveInput({
@@ -171,9 +179,10 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             params: "0x10"
         });
 
-        // vm.startPrank(_owner);
         ILendingPoolConfigurator(address(_extContractsForConfiguration.lendingPoolConfigurator))
             .batchInitReserve(initInputParams);
+
+        // @audit Do wee need inital borrow to prevent any index inflation ? or index inflation will not exist for asUSD ?
 
         // uint256 tokenPrice = _extContractsForConfiguration.oracle.getAssetPrice(_asUsd);
         // uint256 tokenAmount = usdBootstrapAmount * contracts.oracle.BASE_CURRENCY_UNIT()
@@ -214,12 +223,16 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             "reserveDataTemp.variableDebtTokenAddress: ", reserveDataTemp.variableDebtTokenAddress
         );
 
-        ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
-            .setAsteraReserveFactor(
-            _asUsd, poolReserversConfig.reserveType, poolReserversConfig.reserveFactor
-        );
+        // ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
+        //     .setAsteraReserveFactor(
+        //     _asUsd, poolReserversConfig.reserveType, poolReserversConfig.reserveFactor
+        // );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
             .enableFlashloan(_asUsd, poolReserversConfig.reserveType);
-        // vm.stopPrank();
+
+        if (!ILendingPool(lendingPool).paused()) {
+            ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
+                .setPoolPause(true);
+        }
     }
 }

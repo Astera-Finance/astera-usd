@@ -33,10 +33,10 @@ contract InitUsdInLending is Script, DeploymentFixtures {
     uint256 constant ORACLE_TIMEOUT = 86400; // 1 day
     uint256 constant PEG_MARGIN = 1e26; // 10%
     uint8 constant PRICE_FEED_DECIMALS = 8;
-    uint128 constant BUCKET_CAPACITY = 1000000e18;
-    int256 constant MIN_CONTROLLER_ERROR = 1e25; // @audit put this in a configuration file.
-    int256 constant INITIAL_ERR_I_VALUE = 1e25; // @audit put this in a configuration file.
-    uint256 constant KI = 13e19; // @audit put this in a configuration file.
+    uint128 constant BUCKET_CAPACITY = 0; // 1000000e18;
+    int256 constant MIN_CONTROLLER_ERROR = 1e25;
+    int256 constant INITIAL_ERR_I_VALUE = 1e25;
+    uint256 constant KI = 13e19;
 
     address STABLE_POOL = address(2); // Fill with deployed contract
     address RELIQUARY = address(3); // Fill with deployed contract
@@ -47,6 +47,44 @@ contract InitUsdInLending is Script, DeploymentFixtures {
     function initInterestStratAndReliquary(address _stablePool, address _reliquary) public {
         STABLE_POOL = _stablePool;
         RELIQUARY = _reliquary;
+    }
+
+    function writeJsonData(
+        DeployedContracts memory deployedContracts,
+        address actualAToken,
+        address actualVariableDebtToken,
+        string memory path
+    ) internal {
+        // Serialize only the contracts deployed in this script
+        vm.serializeAddress(
+            "asUsdLendingInit",
+            "asUsdInterestRateStrategy",
+            address(deployedContracts.asUsdInterestRateStrategy)
+        );
+        vm.serializeAddress("asUsdLendingInit", "asUsdATokenImpl", deployedContracts.asUsdAToken);
+        vm.serializeAddress(
+            "asUsdLendingInit",
+            "asUsdVariableDebtTokenImpl",
+            deployedContracts.asUsdVariableDebtToken
+        );
+        vm.serializeAddress(
+            "asUsdLendingInit", "asUsdAggregator", deployedContracts.asUsdAggregator
+        );
+        vm.serializeAddress(
+            "asUsdLendingInit",
+            "counterAssetPriceFeed",
+            address(deployedContracts.counterAssetPriceFeed)
+        );
+
+        // Include actual deployed tokens from lending pool (configured but not deployed here)
+        vm.serializeAddress("asUsdLendingInit", "asUsdAToken", actualAToken);
+        string memory output = vm.serializeAddress(
+            "asUsdLendingInit", "asUsdVariableDebtToken", actualVariableDebtToken
+        );
+
+        // Write to file
+        vm.writeJson(output, path);
+        console2.log("ASUSD LENDING INITIALIZATION COMPLETE (check addresses at %s)", path);
     }
 
     function run() public {
@@ -105,7 +143,7 @@ contract InitUsdInLending is Script, DeploymentFixtures {
             console2.log("=== asUsd configuration ===");
             PoolReserversConfig memory poolReserversConfig =
                 PoolReserversConfig({borrowingEnabled: true, reserveFactor: 0, reserveType: false});
-            fixture_configureAsUsd( // @audit plz avoid dependencies to tests/. create a "deployement version" of fixture_configureAsUsd. that perfectly respect the "LendingPool Configuration Checklist."
+            fixture_configureAsUsd(
                 extContractsForConfiguration,
                 poolReserversConfig,
                 address(asUsd),
@@ -116,32 +154,30 @@ contract InitUsdInLending is Script, DeploymentFixtures {
                 deployer,
                 keeper
             );
-            // fixture_configureReservesAsUsd(
-            //     extContractsForConfiguration, poolReserversConfig, asUsd, deployer
-            // );
 
-            /// AsUsdAToken settings
-            // contractsToDeploy.asUsdAToken.setVariableDebtToken(
-            //     address(contractsToDeploy.asUsdVariableDebtToken)
-            // );
-            // ILendingPoolConfigurator(extContracts.lendingPoolConfigurator).setTreasury(
-            //     address(asUsd), poolReserversConfig.reserveType, constantsTreasury
-            // );
-            // contractsToDeploy.asUsdAToken.setReliquaryInfo(
-            //     address(contractsToDeploy.reliquary), RELIQUARY_ALLOCATION
-            // );
-            // contractsToDeploy.asUsdAToken.setKeeper(address(this));
-
-            // /// AsUsdVariableDebtToken settings
-            // contractsToDeploy.asUsdVariableDebtToken.setAToken(
-            //     address(contractsToDeploy.asUsdAToken)
-            // );
             console2.log("=== Adding Facilitator ===");
             DataTypes.ReserveData memory reserveData =
                 lendingPool.getReserveData(asUsd, poolReserversConfig.reserveType);
-            // vm.prank(AsUSD(asUsd).owner());
-            AsUSD(asUsd).addFacilitator(reserveData.aTokenAddress, "aToken", BUCKET_CAPACITY); // @audit define a default capacity in a configuration file. instead of 100e18 + this should be 100000e18 or 1000000e18 at launch at least.
+            if (BUCKET_CAPACITY > 0) {
+                AsUSD(asUsd).addFacilitator(reserveData.aTokenAddress, "aToken", BUCKET_CAPACITY);
+            }
+
             vm.stopBroadcast();
+
+            // Get actual deployed aToken and debt token addresses
+            address actualAToken = lendingPool.getReserveData(asUsd, false).aTokenAddress;
+            address actualVariableDebtToken =
+                lendingPool.getReserveData(asUsd, false).variableDebtTokenAddress;
+
+            // Create output directory and path
+            string memory root = vm.projectRoot();
+            if (!vm.exists(string.concat(root, "/script/outputs"))) {
+                vm.createDir(string.concat(root, "/script/outputs"), true);
+            }
+            string memory path = string.concat(root, "/script/outputs/InitUsdInLending.s.json");
+
+            // Write deployment data to JSON
+            writeJsonData(deployedContracts, actualAToken, actualVariableDebtToken, path);
 
             console2.log(
                 "Interest start deployed at: ", address(deployedContracts.asUsdInterestRateStrategy)
@@ -156,13 +192,8 @@ contract InitUsdInLending is Script, DeploymentFixtures {
                 address(deployedContracts.counterAssetPriceFeed)
             );
 
-            console2.log(
-                "asUsdAToken deployed at: ", lendingPool.getReserveData(asUsd, false).aTokenAddress
-            );
-            console2.log(
-                "asUsdVariableDebtToken deployed at: ",
-                lendingPool.getReserveData(asUsd, false).variableDebtTokenAddress
-            );
+            console2.log("asUsdAToken deployed at: ", actualAToken);
+            console2.log("asUsdVariableDebtToken deployed at: ", actualVariableDebtToken);
         }
     }
 }
