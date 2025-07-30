@@ -65,13 +65,14 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
             strategists[0] = multisignAdmin;
             strategists[1] = multisignGuardian;
 
+            assert(balancerContracts.balVault == 0xbA1333333333a1BA1108E8412f11850A5C319bA9);
             BalancerV3Router balancerV3Router =
                 new BalancerV3Router(address(balancerContracts.balVault), deployer, strategists); // @audit make sure balVault is always Balancer VaultV3.
 
             address[] memory ownerArr = new address[](3);
             ownerArr[0] = multisignAdmin;
             ownerArr[1] = multisignAdmin;
-            ownerArr[2] = multisignGuardian; // @audit ATTENTION remove this !!!!! -> we need 3 owners, otherwise it will revert in constructor of ReaperVaultV2.sol.
+            ownerArr[2] = multisignGuardian; // need 3 owners, otherwise it will revert in constructor of ReaperVaultV2.sol.
 
             ReaperVaultV2 asteraVault = new ReaperVaultV2(
                 STABLE_POOL,

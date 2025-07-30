@@ -33,7 +33,7 @@ contract InitUsdInLending is Script, DeploymentFixtures {
     uint256 constant ORACLE_TIMEOUT = 86400; // 1 day
     uint256 constant PEG_MARGIN = 1e26; // 10%
     uint8 constant PRICE_FEED_DECIMALS = 8;
-    uint128 constant BUCKET_CAPACITY = 0; // 1000000e18;
+    uint128 constant BUCKET_CAPACITY = 1000000e18;
     int256 constant MIN_CONTROLLER_ERROR = 1e25;
     int256 constant INITIAL_ERR_I_VALUE = 1e25;
     uint256 constant KI = 13e19;
