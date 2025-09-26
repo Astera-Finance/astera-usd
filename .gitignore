@@ -45,3 +45,5 @@ pyenv
 # Test outputs
 /test/**/*.csv
 /test/**/*.png
+
+*/outputs

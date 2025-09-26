@@ -152,6 +152,14 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         ILendingPoolConfigurator.InitReserveInput[] memory initInputParams =
             new ILendingPoolConfigurator.InitReserveInput[](1);
 
+        address lendingPool = ILendingPoolAddressesProvider(
+            _extContractsForConfiguration.lendingPoolAddressesProvider
+        ).getLendingPool();
+        if (ILendingPool(lendingPool).paused()) {
+            ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
+                .setPoolPause(false);
+        }
+
         string memory tmpSymbol = ERC20(_asUsd).symbol();
 
         initInputParams[0] = ILendingPoolConfigurator.InitReserveInput({
@@ -165,39 +173,19 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
             incentivesController: _extContractsForConfiguration.rewarder,
             underlyingAssetName: tmpSymbol,
             aTokenName: string.concat("Astera ", tmpSymbol),
-            aTokenSymbol: string.concat("cl", tmpSymbol),
+            aTokenSymbol: string.concat("as-", tmpSymbol),
             variableDebtTokenName: string.concat("Astera variable debt bearing ", tmpSymbol),
-            variableDebtTokenSymbol: string.concat("variableDebt", tmpSymbol),
+            variableDebtTokenSymbol: string.concat("asDebt-", tmpSymbol),
             params: "0x10"
         });
 
-        // vm.startPrank(_owner);
         ILendingPoolConfigurator(address(_extContractsForConfiguration.lendingPoolConfigurator))
             .batchInitReserve(initInputParams);
 
-        // uint256 tokenPrice = _extContractsForConfiguration.oracle.getAssetPrice(_asUsd);
-        // uint256 tokenAmount = usdBootstrapAmount * contracts.oracle.BASE_CURRENCY_UNIT()
-        //     * 10 ** IERC20Detailed(_asUsd).decimals() / tokenPrice;
+        // @audit Do wee need inital borrow to prevent any index inflation ? or index inflation will not exist for asUSD ?
 
-        // console2.log(
-        //     "Bootstrap amount: %s %s for price: %s",
-        //     tokenAmount,
-        //     IERC20Detailed(_asUsd).symbol(),
-        //     tokenPrice
-        // );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
             .enableBorrowingOnReserve(_asUsd, poolReserversConfig.reserveType);
-        // _contracts.lendingPool.borrow(
-        //     _asUsd,
-        //     reserveConfig.reserveType,
-        //     tokenAmount / 2,
-        //     _contracts.lendingPoolAddressesProvider.getPoolAdmin()
-        // );
-        // reserveData = _contracts.lendingPool.getReserveData(_asUsd, reserveConfig.reserveType);
-        // require(
-        //     IERC20Detailed(reserveData.variableDebtTokenAddress).totalSupply() == tokenAmount / 2,
-        //     "TotalSupply of debt not equal to borrowed amount!"
-        // );
 
         if (!poolReserversConfig.borrowingEnabled) {
             ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
@@ -220,6 +208,10 @@ contract DeploymentFixtures is Sort, DeploymentConstants {
         );
         ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
             .enableFlashloan(_asUsd, poolReserversConfig.reserveType);
-        // vm.stopPrank();
+
+        if (!ILendingPool(lendingPool).paused()) {
+            ILendingPoolConfigurator(_extContractsForConfiguration.lendingPoolConfigurator)
+                .setPoolPause(true);
+        }
     }
 }

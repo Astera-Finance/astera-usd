@@ -14,16 +14,42 @@ import {ICurves} from "contracts/interfaces/ICurves.sol";
 
 import {console2} from "forge-std/console2.sol";
 
-contract DeployBalancerPool is Script, DeploymentFixtures {
+contract DeployReliquary is Script, DeploymentFixtures {
     uint256 constant SLOPE = 100;
     uint256 constant MIN_MULTIPLIER = 365 days * 100;
     uint256 constant PLATEAU = 10 days;
-
     string constant RELIQUARY_NAME = "Reliquary sasUsd";
     string constant RELIQUARY_SYMBOL = "sasUsd Relic";
     string constant RELIQUARY_POOL_NAME = "sasUsd Pool";
 
-    address constant STABLE_POOL = address(1); // fill with real stable pool !!
+    address STABLE_POOL = address(1); // fill with real stable pool !!
+
+    /**
+     * @dev use this function ONLY for DeployAll.s.sol
+     */
+    function initStablePool(address _stablePool) public {
+        STABLE_POOL = _stablePool;
+    }
+
+    function writeJsonData(
+        address reliquary,
+        address linearPlateauCurve,
+        address nftDescriptor,
+        address parentRewarder,
+        address rewarder,
+        string memory path
+    ) internal {
+        // Serialize main contract addresses
+        vm.serializeAddress("reliquaryDeployment", "reliquary", reliquary);
+        vm.serializeAddress("reliquaryDeployment", "linearPlateauCurve", linearPlateauCurve);
+        vm.serializeAddress("reliquaryDeployment", "nftDescriptor", nftDescriptor);
+        vm.serializeAddress("reliquaryDeployment", "parentRewarder", parentRewarder);
+        string memory output = vm.serializeAddress("reliquaryDeployment", "rewarder", rewarder);
+
+        // Write to file
+        vm.writeJson(output, path);
+        console2.log("RELIQUARY DEPLOYED (check addresses at %s)", path);
+    }
 
     /// ========= Reliquary Deploy =========
     function run() public returns (address, address, address, address, address) {
@@ -35,27 +61,16 @@ contract DeployBalancerPool is Script, DeploymentFixtures {
         address deployer = vm.addr(pk);
         console2.log("Deployer address: ", deployer);
 
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(pk);
         Reliquary reliquary = new Reliquary(REWARD_TOKEN, 0, RELIQUARY_NAME, RELIQUARY_SYMBOL);
-        address linearPlateauCurve = address(new LinearPlateauCurve(SLOPE, MIN_MULTIPLIER, PLATEAU)); // @audit can you put MIN_MULTIPLIER, PLATEAU, SLOPE in a configuration file ?
+        address linearPlateauCurve = address(new LinearPlateauCurve(SLOPE, MIN_MULTIPLIER, PLATEAU));
 
         address nftDescriptor = address(new NFTDescriptor(address(reliquary)));
         address parentRewarder = address(new ParentRollingRewarder());
-        Reliquary(address(reliquary)).grantRole(
-            keccak256("OPERATOR"),
-            multisignGuardian // @audit should multisignAdmin not multisignGuardian imo
-        );
+        Reliquary(address(reliquary)).grantRole(keccak256("OPERATOR"), multisignAdmin);
         Reliquary(address(reliquary)).grantRole(keccak256("GUARDIAN"), multisignGuardian);
 
-        // @audit you can also grant multisignAdmin to OPERATOR and GUARDIAN roles.
-        // Reliquary(address(contractsToDeploy.reliquary)).grantRole(
-        //     keccak256("GUARDIAN"), multisignAdmin
-        // );
-
-        Reliquary(address(reliquary)).grantRole(
-            keccak256("EMISSION_RATE"),
-            emissionRate // @audit can be set to multisignGuardian. Remove the emissionRate variable.
-        );
+        Reliquary(address(reliquary)).grantRole(keccak256("EMISSION_RATE"), multisignGuardian);
 
         console2.log("====== Adding Pool to Reliquary ======");
         IERC20(STABLE_POOL).approve(address(reliquary), 1); // approve 1 wei to bootstrap the pool
@@ -72,12 +87,28 @@ contract DeployBalancerPool is Script, DeploymentFixtures {
 
         RollingRewarder rewarder =
             RollingRewarder(ParentRollingRewarder(parentRewarder).createChild(address(asUsd)));
-        vm.stopBroadcast();
-        // IERC20(asUsd).approve(address(reliquary), type(uint256).max); // @audit remove this.
-        // IERC20(asUsd).approve(address(rewarder), type(uint256).max); // @audit remove this.
 
-        // @audit ATTENTION - GRANT multisignAdmin to DEFAULT_ADMIN_ROLE in Reliquary.sol.
-        // @audit ATTENTION - REVOKE msg.sender/deployer from DEFAULT_ADMIN_ROLE role!!!!!!! in Reliquary.sol.
+        Reliquary(address(reliquary)).grantRole(keccak256("DEFAULT_ADMIN_ROLE"), multisignAdmin);
+        Reliquary(address(reliquary)).revokeRole(keccak256("DEFAULT_ADMIN_ROLE"), deployer);
+
+        vm.stopBroadcast();
+
+        // Create output directory and path
+        string memory root = vm.projectRoot();
+        if (!vm.exists(string.concat(root, "/script/outputs"))) {
+            vm.createDir(string.concat(root, "/script/outputs"), true);
+        }
+        string memory path = string.concat(root, "/script/outputs/ReliquaryContracts.json");
+
+        // Write deployment data to JSON
+        writeJsonData(
+            address(reliquary),
+            linearPlateauCurve,
+            nftDescriptor,
+            parentRewarder,
+            address(rewarder),
+            path
+        );
 
         console2.log("Reliquary deployed at: ", address(reliquary));
         console2.log("LinearPlateauCurve deployed at: ", linearPlateauCurve);

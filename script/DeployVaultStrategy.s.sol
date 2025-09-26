@@ -18,9 +18,36 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
     string constant VAULT_NAME = "Staked Astera USD";
     string constant VAULT_SYMBOL = "sasUsd";
     uint256 constant RELIC_ID = 1;
+    uint16 constant MANAGEMENT_FEE_BPS = 0; // 0% management fee
+    uint256 constant STRAT_ALLOCATION = 10000; // 100% allocation to strategy
 
-    address constant STABLE_POOL = address(1); // fill with deployed stable pool
-    address constant RELIQUARY = address(2);
+    address[] KEEPERS = [multisignAdmin, multisignGuardian]; // Add here real keepers (ask @wetzo)!
+    address STABLE_POOL = address(1); // Fill with deployed stable pool
+    address RELIQUARY = address(2);
+
+    /**
+     * @dev use this function ONLY for DeployAll.s.sol
+     */
+    function initStablePoolAndReliquary(address _stablePool, address _reliquary) public {
+        STABLE_POOL = _stablePool;
+        RELIQUARY = _reliquary;
+    }
+
+    function writeJsonData(
+        address balancerV3Router,
+        address asteraVault,
+        address strategy,
+        string memory path
+    ) internal {
+        // Serialize main contract addresses
+        vm.serializeAddress("vaultStrategyDeployment", "balancerV3Router", balancerV3Router);
+        vm.serializeAddress("vaultStrategyDeployment", "asteraVault", asteraVault);
+        string memory output = vm.serializeAddress("vaultStrategyDeployment", "strategy", strategy);
+
+        // Write to file
+        vm.writeJson(output, path);
+        console2.log("VAULT STRATEGY DEPLOYED (check addresses at %s)", path);
+    }
 
     function run() public returns (address, address, address) {
         /// ========== sasUsd Vault Strategy Deploy ===========
@@ -33,30 +60,28 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
             address deployer = vm.addr(pk);
             console2.log("Deployer address: ", deployer);
 
-            vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-            address[] memory interactors = new address[](1); // @audit ATTENTION should be :: new address[](0)
-            interactors[0] = deployer; // @audit ATTENTION remove this !!!!!
+            vm.startBroadcast(pk);
+            address[] memory strategists = new address[](2);
+            strategists[0] = multisignAdmin;
+            strategists[1] = multisignGuardian;
+
+            assert(balancerContracts.balVault == 0xbA1333333333a1BA1108E8412f11850A5C319bA9);
             BalancerV3Router balancerV3Router =
-                new BalancerV3Router(address(balancerContracts.balVault), deployer, interactors); // @audit make sure balVault is always Balancer VaultV3.
+                new BalancerV3Router(address(balancerContracts.balVault), deployer, strategists); // @audit make sure balVault is always Balancer VaultV3.
 
-            address[] memory ownerArr = new address[](3); // @audit (2)
-            ownerArr[0] = deployer; // @audit ATTENTION keep it but to be revoked.
+            address[] memory ownerArr = new address[](3);
+            ownerArr[0] = multisignAdmin;
             ownerArr[1] = multisignAdmin;
-            ownerArr[2] = multisignAdmin; // @audit ATTENTION remove this !!!!!
-
-            address[] memory ownerArr1 = new address[](1); // @audit  remove this useless array.
-            ownerArr[0] = deployer;
-
-            IFeeController(FEE_CONTROLLER).updateManagementFeeBPS(0); // @audit you can remove this with the implementation in the gist.
+            ownerArr[2] = multisignGuardian; // need 3 owners, otherwise it will revert in constructor of ReaperVaultV2.sol.
 
             ReaperVaultV2 asteraVault = new ReaperVaultV2(
                 STABLE_POOL,
                 VAULT_NAME,
                 VAULT_SYMBOL,
                 type(uint256).max,
-                0,
+                MANAGEMENT_FEE_BPS,
                 constantsTreasury,
-                ownerArr,
+                strategists,
                 ownerArr,
                 FEE_CONTROLLER
             );
@@ -67,35 +92,37 @@ contract DeployVaultStrategy is Script, DeploymentConstants {
 
             Reliquary(RELIQUARY).transferFrom(deployer, address(strategy), RELIC_ID); // transfer Relic#1 to strategy.
 
-            // @audit use this array for strategy.
-            // address[] memory ownerArrStrategy = new address[](1);
-            // ownerArrStrategy[0] = multisignAdmin;
-
             strategy.initialize(
                 address(asteraVault),
                 address(balancerContracts.balVault),
                 address(balancerV3Router),
-                ownerArr1, // @audit put ownerArrStrategy
-                ownerArr, // @audit put ownerArrStrategy
-                ownerArr1, // @audit create a keeper arrays with multisignAdmin, multisignGuardian and ask wetzo for the keeper address he will setup.
+                strategists,
+                ownerArr,
+                KEEPERS,
                 address(asUsd),
                 address(RELIQUARY),
                 address(STABLE_POOL)
             );
 
-            asteraVault.addStrategy(address(strategy), 0, 10_000); // 100 % invested
+            asteraVault.addStrategy(address(strategy), 0, STRAT_ALLOCATION);
 
-            //DEFAULT AMIND ROLE - balancer team shall do it // @audit you mean we should do it ? why balancer team ? we own balancerV3Router.
-            address[] memory interactors2 = new address[](1);
-            interactors2[0] = address(strategy);
-            balancerV3Router.setInteractors(interactors2);
+            asteraVault.grantRole(asteraVault.DEFAULT_ADMIN_ROLE(), multisignAdmin);
+            asteraVault.revokeRole(asteraVault.DEFAULT_ADMIN_ROLE(), deployer);
+
+            balancerV3Router.grantRole(balancerV3Router.DEFAULT_ADMIN_ROLE(), multisignAdmin);
+            balancerV3Router.revokeRole(balancerV3Router.DEFAULT_ADMIN_ROLE(), deployer);
+
             vm.stopBroadcast();
 
-            // @audit ATTENTION - GRANT multisignAdmin to DEFAULT_ADMIN_ROLE from BalancerV3Router.sol.
-            // @audit ATTENTION - REVOKE msg.sender/deployer from DEFAULT_ADMIN_ROLE role!!!!!!! from BalancerV3Router.sol.
+            // Create output directory and path
+            string memory root = vm.projectRoot();
+            if (!vm.exists(string.concat(root, "/script/outputs"))) {
+                vm.createDir(string.concat(root, "/script/outputs"), true);
+            }
+            string memory path = string.concat(root, "/script/outputs/VaultStrategyContracts.json");
 
-            // @audit ATTENTION - GRANT multisignAdmin to DEFAULT_ADMIN_ROLE from ReaperVaultV2.sol.
-            // @audit ATTENTION - REVOKE msg.sender/deployer from DEFAULT_ADMIN_ROLE role!!!!!!! from ReaperVaultV2.sol.
+            // Write deployment data to JSON
+            writeJsonData(address(balancerV3Router), address(asteraVault), address(strategy), path);
 
             console2.log("BalancerV3Router deployed at", address(balancerV3Router));
             console2.log("AsteraVault deployed at", address(asteraVault));
