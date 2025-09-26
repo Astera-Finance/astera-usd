@@ -2,7 +2,7 @@
 pragma solidity ^0.8.22;
 
 import {OFTExtended} from "./OFTExtended.sol";
-import {IAsUSD} from "contracts/interfaces/IAsUSD.sol";
+import {IAsUSD} from "../interfaces/IAsUSD.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
